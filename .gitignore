@@ -23,7 +23,7 @@ pnpm-debug.log*
 # jetbrains setting folder
 .idea/
 
-# database
-db/*.db
+# database (allow taraweeh.db for production data)
 db/*.db-shm
 db/*.db-wal
+!db/taraweeh.db
