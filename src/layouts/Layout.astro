@@ -1,0 +1,38 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+
+interface Props {
+    title: string;
+}
+
+const { title } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content="Directory of Taraweeh Recordings" />
+        <meta name="viewport" content="width=device-width" />
+        <meta name="generator" content={Astro.generator} />
+
+        <!-- Favicons -->
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" href="/favicon-192x192.png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="msapplication-TileImage" content="/mstile-270x270.png" />
+
+        <!-- Open Graph / SEO -->
+        <meta property="og:url" content="https://taraweeh.co.za" />
+        <meta property="og:site_name" content="Taraweeh.co.za" />
+        <meta property="og:title" content={title} />
+        <meta property="og:type" content="website" />
+
+        <title>{title}</title>
+    </head>
+    <body class="bg-white dark:bg-zinc-900">
+        <slot />
+        <Footer />
+    </body>
+</html>
