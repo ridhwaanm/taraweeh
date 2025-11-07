@@ -1,12 +1,12 @@
-import Database from 'better-sqlite3';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-import puppeteer from 'puppeteer';
+import Database from "better-sqlite3";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import puppeteer from "puppeteer";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const dbPath = join(__dirname, '../db/taraweeh.db');
+const dbPath = join(__dirname, "../db/taraweeh.db");
 
 interface VideoData {
   title: string;
@@ -21,14 +21,15 @@ interface VideoData {
  * Videos should match format: "Taraweeh YYYY | Hafidh Name | Section"
  */
 async function scrapeYouTubeVideos(): Promise<VideoData[]> {
-  const channelUrl = 'https://www.youtube.com/@aswaatulqurraa/search?query=taraweeh';
+  const channelUrl =
+    "https://www.youtube.com/@aswaatulqurraa/search?query=taraweeh";
 
   console.log(`Fetching videos from: ${channelUrl}`);
-  console.log('Launching browser...');
+  console.log("Launching browser...");
 
   const browser = await puppeteer.launch({
     headless: false, // Set to false to see what's happening
-    args: ['--no-sandbox', '--disable-setuid-sandbox']
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
   });
 
   try {
@@ -37,25 +38,28 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
     // Set viewport for consistent rendering
     await page.setViewport({ width: 1280, height: 800 });
 
-    console.log('Navigating to channel...');
-    await page.goto(channelUrl, { waitUntil: 'networkidle2' });
+    console.log("Navigating to channel...");
+    await page.goto(channelUrl, { waitUntil: "networkidle2" });
 
     // Wait for page to load
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Check what selectors are available
     const pageContent = await page.evaluate(() => {
       return {
-        hasYtdRichItem: document.querySelectorAll('ytd-rich-item-renderer').length,
-        hasYtdGridVideo: document.querySelectorAll('ytd-grid-video-renderer').length,
-        hasYtdVideoRenderer: document.querySelectorAll('ytd-video-renderer').length,
-        bodyText: document.body.innerText.substring(0, 500)
+        hasYtdRichItem: document.querySelectorAll("ytd-rich-item-renderer")
+          .length,
+        hasYtdGridVideo: document.querySelectorAll("ytd-grid-video-renderer")
+          .length,
+        hasYtdVideoRenderer:
+          document.querySelectorAll("ytd-video-renderer").length,
+        bodyText: document.body.innerText.substring(0, 500),
       };
     });
 
-    console.log('Page analysis:', pageContent);
+    console.log("Page analysis:", pageContent);
 
-    console.log('Scrolling to load all videos...');
+    console.log("Scrolling to load all videos...");
 
     let previousHeight = 0;
     let scrollAttempts = 0;
@@ -68,14 +72,16 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
       });
 
       // Wait for new content to load
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Get current scroll height
-      const currentHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+      const currentHeight = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
 
       // If height hasn't changed, we've reached the end
       if (currentHeight === previousHeight) {
-        console.log('Reached end of videos list');
+        console.log("Reached end of videos list");
         break;
       }
 
@@ -85,13 +91,15 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
       // Log progress every 5 scrolls
       if (scrollAttempts % 5 === 0) {
         const videoCount = await page.evaluate(() => {
-          return document.querySelectorAll('ytd-rich-item-renderer').length;
+          return document.querySelectorAll("ytd-rich-item-renderer").length;
         });
-        console.log(`Scroll ${scrollAttempts}: Found ${videoCount} videos so far...`);
+        console.log(
+          `Scroll ${scrollAttempts}: Found ${videoCount} videos so far...`,
+        );
       }
     }
 
-    console.log('Extracting video data...');
+    console.log("Extracting video data...");
 
     // Try multiple selectors to find videos
     const videos = await page.evaluate(() => {
@@ -99,13 +107,13 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
 
       // Try different possible selectors
       const selectors = [
-        'ytd-rich-item-renderer',
-        'ytd-grid-video-renderer',
-        'ytd-video-renderer'
+        "ytd-rich-item-renderer",
+        "ytd-grid-video-renderer",
+        "ytd-video-renderer",
       ];
 
       let videoElements: NodeListOf<Element> | null = null;
-      let usedSelector = '';
+      let usedSelector = "";
 
       for (const selector of selectors) {
         const elements = document.querySelectorAll(selector);
@@ -116,7 +124,9 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
         }
       }
 
-      console.log(`Using selector: ${usedSelector}, found ${videoElements?.length || 0} elements`);
+      console.log(
+        `Using selector: ${usedSelector}, found ${videoElements?.length || 0} elements`,
+      );
 
       if (!videoElements || videoElements.length === 0) {
         // Debug: log all possible video-related elements
@@ -124,34 +134,42 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
         console.log(`Found ${allLinks.length} watch links`);
 
         allLinks.forEach((link) => {
-          const href = link.getAttribute('href') || '';
-          const title = link.getAttribute('title') || link.textContent?.trim() || '';
+          const href = link.getAttribute("href") || "";
+          const title =
+            link.getAttribute("title") || link.textContent?.trim() || "";
 
-          if (title && href.includes('/watch?v=')) {
+          if (title && href.includes("/watch?v=")) {
             results.push({
               title,
-              url: href.startsWith('http') ? href : `https://www.youtube.com${href}`
+              url: href.startsWith("http")
+                ? href
+                : `https://www.youtube.com${href}`,
             });
           }
         });
       } else {
         videoElements.forEach((element) => {
           // Try multiple selectors for title
-          let titleElement = element.querySelector('#video-title');
+          let titleElement = element.querySelector("#video-title");
           if (!titleElement) {
-            titleElement = element.querySelector('a#video-title-link');
+            titleElement = element.querySelector("a#video-title-link");
           }
           if (!titleElement) {
-            titleElement = element.querySelector('a[title]');
+            titleElement = element.querySelector("a[title]");
           }
 
-          const title = titleElement?.getAttribute('title') || titleElement?.textContent?.trim() || '';
-          const videoUrl = titleElement?.getAttribute('href') || '';
+          const title =
+            titleElement?.getAttribute("title") ||
+            titleElement?.textContent?.trim() ||
+            "";
+          const videoUrl = titleElement?.getAttribute("href") || "";
 
           if (title && videoUrl) {
             results.push({
               title,
-              url: videoUrl.startsWith('http') ? videoUrl : `https://www.youtube.com${videoUrl}`
+              url: videoUrl.startsWith("http")
+                ? videoUrl
+                : `https://www.youtube.com${videoUrl}`,
             });
           }
         });
@@ -159,7 +177,7 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
 
       // Remove duplicates based on URL
       const uniqueResults = Array.from(
-        new Map(results.map(item => [item.url, item])).values()
+        new Map(results.map((item) => [item.url, item])).values(),
       );
 
       return uniqueResults;
@@ -174,10 +192,10 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
       const title = video.title;
 
       // Only process videos starting with "Taraweeh "
-      if (!title.startsWith('Taraweeh ')) continue;
+      if (!title.startsWith("Taraweeh ")) continue;
 
       // Parse title format: "Taraweeh YYYY | Hafidh | Section"
-      const titleParts = title.split('|').map((p: string) => p.trim());
+      const titleParts = title.split("|").map((p: string) => p.trim());
 
       let year: number | null = null;
       let hafidh: string | null = null;
@@ -204,18 +222,17 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
         url: video.url,
         year,
         hafidh,
-        section
+        section,
       });
     }
 
     return taraweehVideos;
-
   } catch (error) {
-    console.error('Error scraping YouTube:', error);
+    console.error("Error scraping YouTube:", error);
     throw error;
   } finally {
     await browser.close();
-    console.log('Browser closed');
+    console.log("Browser closed");
   }
 }
 
@@ -261,9 +278,11 @@ async function importVideosToDatabase(videos: VideoData[]) {
     // Get or create default venue
     let defaultVenueId = getDefaultVenue.get()?.id;
     if (!defaultVenueId) {
-      db.prepare(`
+      db.prepare(
+        `
         INSERT INTO venues (name, city) VALUES ('Unknown', 'Unknown')
-      `).run();
+      `,
+      ).run();
       defaultVenueId = getDefaultVenue.get()?.id;
     }
 
@@ -278,7 +297,9 @@ async function importVideosToDatabase(videos: VideoData[]) {
       insertHafidh.run(video.hafidh);
 
       // Get hafidh ID
-      const hafidhRow = getHafidhId.get(video.hafidh);
+      const hafidhRow = getHafidhId.get(video.hafidh) as
+        | { id: number }
+        | undefined;
       if (!hafidhRow) {
         console.log(`⚠ Could not find hafidh: ${video.hafidh}`);
         skipped++;
@@ -296,12 +317,12 @@ async function importVideosToDatabase(videos: VideoData[]) {
           hijriYear,
           video.url,
           video.section,
-          video.title
+          video.title,
         );
         imported++;
         console.log(`✓ Imported: ${video.title}`);
       } catch (error: any) {
-        if (error.message.includes('UNIQUE constraint failed')) {
+        if (error.message.includes("UNIQUE constraint failed")) {
           console.log(`→ Already exists: ${video.title}`);
           skipped++;
         } else {
@@ -310,8 +331,9 @@ async function importVideosToDatabase(videos: VideoData[]) {
       }
     }
 
-    console.log(`\n✅ Import complete: ${imported} imported, ${skipped} skipped`);
-
+    console.log(
+      `\n✅ Import complete: ${imported} imported, ${skipped} skipped`,
+    );
   } finally {
     db.close();
   }
@@ -320,23 +342,24 @@ async function importVideosToDatabase(videos: VideoData[]) {
 // Main execution
 async function main() {
   try {
-    console.log('🎬 Starting YouTube Taraweeh scraper...\n');
+    console.log("🎬 Starting YouTube Taraweeh scraper...\n");
 
     const videos = await scrapeYouTubeVideos();
     console.log(`\n✓ Found ${videos.length} Taraweeh videos`);
 
     // Display sample of parsed videos
-    console.log('\nSample of parsed videos:');
-    videos.slice(0, 5).forEach(v => {
+    console.log("\nSample of parsed videos:");
+    videos.slice(0, 5).forEach((v) => {
       console.log(`  - ${v.title}`);
-      console.log(`    Year: ${v.year}, Hafidh: ${v.hafidh}, Section: ${v.section}`);
+      console.log(
+        `    Year: ${v.year}, Hafidh: ${v.hafidh}, Section: ${v.section}`,
+      );
     });
 
     // Import to database
     await importVideosToDatabase(videos);
-
   } catch (error) {
-    console.error('❌ Scraper failed:', error);
+    console.error("❌ Scraper failed:", error);
     process.exit(1);
   }
 }
