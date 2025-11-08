@@ -1,15 +1,9 @@
 import type { APIRoute } from "astro";
 import { getAuth } from "../../../lib/auth";
-import Database from "better-sqlite3";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { db, getOrCreateHafidh, getOrCreateVenue } from "../../../lib/db";
 import puppeteer from "puppeteer";
 
 export const prerender = false;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const dbPath = join(__dirname, "../../../../db/taraweeh.db");
 
 // Rate limiting: 5 minutes between fetches per user
 const lastFetchTimes = new Map<string, number>();
@@ -156,37 +150,7 @@ async function getTracksFromUser(userTracksUrl: string): Promise<Track[]> {
   }
 }
 
-function getOrCreateHafidh(db: Database.Database, name: string): number {
-  const existing = db
-    .prepare("SELECT id FROM huffadh WHERE name = ?")
-    .get(name) as { id: number } | undefined;
-
-  if (existing) {
-    return existing.id;
-  }
-
-  const result = db.prepare("INSERT INTO huffadh (name) VALUES (?)").run(name);
-  return result.lastInsertRowid as number;
-}
-
-function getOrCreateVenue(
-  db: Database.Database,
-  name: string,
-  city: string,
-): number {
-  const existing = db
-    .prepare("SELECT id FROM venues WHERE name = ? AND city = ?")
-    .get(name, city) as { id: number } | undefined;
-
-  if (existing) {
-    return existing.id;
-  }
-
-  const result = db
-    .prepare("INSERT INTO venues (name, city) VALUES (?, ?)")
-    .run(name, city);
-  return result.lastInsertRowid as number;
-}
+// Removed: Now using getOrCreateHafidh and getOrCreateVenue from db.ts
 
 export const POST: APIRoute = async (context) => {
   // Check authentication
@@ -219,8 +183,6 @@ export const POST: APIRoute = async (context) => {
 
   lastFetchTimes.set(userId, now);
 
-  const db = new Database(dbPath);
-
   try {
     const userTracksUrl = "https://soundcloud.com/aswaatulqurraa/tracks";
 
@@ -237,7 +199,6 @@ export const POST: APIRoute = async (context) => {
     );
 
     if (tracks.length === 0) {
-      db.close();
       return new Response(
         JSON.stringify({
           error: `No Taraweeh tracks found (looking for "Taraweeh 14" in title)`,
@@ -250,8 +211,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Default venue for SoundCloud tracks
-    const defaultVenueId = getOrCreateVenue(
-      db,
+    const defaultVenueId = await getOrCreateVenue(
       "Aswaat-ul-Qurraa",
       "Cape Town",
     );
@@ -265,56 +225,62 @@ export const POST: APIRoute = async (context) => {
         const parsed = parseTrackTitle(track.title, track.url);
 
         // Get or create hafidh
-        const hafidhId = getOrCreateHafidh(db, parsed.hafidh);
+        const hafidhId = await getOrCreateHafidh(parsed.hafidh);
 
         // Use default year if not found
         const year = parsed.hijriYear || 1446;
 
         // Check if recording already exists (using URL as unique key)
-        const existing = db
-          .prepare("SELECT id FROM recordings WHERE url = ?")
-          .get(parsed.url) as { id: number } | undefined;
+        const existingResult = await db.execute({
+          sql: "SELECT id FROM recordings WHERE url = ?",
+          args: [parsed.url],
+        });
+
+        const existing =
+          existingResult.rows.length > 0
+            ? { id: existingResult.rows[0][0] as number }
+            : undefined;
 
         if (existing) {
           // Update existing record with latest data from SoundCloud
-          db.prepare(
-            `
-            UPDATE recordings
-            SET hafidh_id = ?, venue_id = ?, hijri_year = ?, section = ?, title = ?, source = 'soundcloud'
-            WHERE id = ?
-          `,
-          ).run(
-            hafidhId,
-            defaultVenueId,
-            year,
-            parsed.section,
-            parsed.title,
-            existing.id,
-          );
+          await db.execute({
+            sql: `
+              UPDATE recordings
+              SET hafidh_id = ?, venue_id = ?, hijri_year = ?, section = ?, title = ?, source = 'soundcloud'
+              WHERE id = ?
+            `,
+            args: [
+              hafidhId,
+              defaultVenueId,
+              year,
+              parsed.section,
+              parsed.title,
+              existing.id,
+            ],
+          });
           updated++;
         } else {
           // Insert new recording
-          db.prepare(
-            `
-            INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
-            VALUES (?, ?, ?, ?, 'soundcloud', ?, ?)
-          `,
-          ).run(
-            hafidhId,
-            defaultVenueId,
-            year,
-            parsed.url,
-            parsed.section,
-            parsed.title,
-          );
+          await db.execute({
+            sql: `
+              INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
+              VALUES (?, ?, ?, ?, 'soundcloud', ?, ?)
+            `,
+            args: [
+              hafidhId,
+              defaultVenueId,
+              year,
+              parsed.url,
+              parsed.section,
+              parsed.title,
+            ],
+          });
           imported++;
         }
       } catch (error) {
         errors.push(`${track.title}: ${error}`);
       }
     }
-
-    db.close();
 
     return new Response(
       JSON.stringify({
@@ -329,7 +295,6 @@ export const POST: APIRoute = async (context) => {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    db.close();
     // Log error server-side, but don't expose details to client
     console.error("SoundCloud fetch error:", error);
     return new Response(

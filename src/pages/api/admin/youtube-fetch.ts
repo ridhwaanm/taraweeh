@@ -1,15 +1,9 @@
 import type { APIRoute } from "astro";
 import { getAuth } from "../../../lib/auth";
-import Database from "better-sqlite3";
-import { join, dirname } from "path";
-import { fileURLToPath } from "url";
+import { db, getOrCreateHafidh, getOrCreateVenue } from "../../../lib/db";
 import puppeteer from "puppeteer";
 
 export const prerender = false;
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const dbPath = join(__dirname, "../../../../db/taraweeh.db");
 
 // Rate limiting: 5 minutes between fetches per user
 const lastFetchTimes = new Map<string, number>();
@@ -226,37 +220,7 @@ async function scrapeYouTubeVideos(): Promise<VideoData[]> {
   }
 }
 
-function getOrCreateHafidh(db: Database.Database, name: string): number {
-  const existing = db
-    .prepare("SELECT id FROM huffadh WHERE name = ?")
-    .get(name) as { id: number } | undefined;
-
-  if (existing) {
-    return existing.id;
-  }
-
-  const result = db.prepare("INSERT INTO huffadh (name) VALUES (?)").run(name);
-  return result.lastInsertRowid as number;
-}
-
-function getOrCreateVenue(
-  db: Database.Database,
-  name: string,
-  city: string,
-): number {
-  const existing = db
-    .prepare("SELECT id FROM venues WHERE name = ? AND city = ?")
-    .get(name, city) as { id: number } | undefined;
-
-  if (existing) {
-    return existing.id;
-  }
-
-  const result = db
-    .prepare("INSERT INTO venues (name, city) VALUES (?, ?)")
-    .run(name, city);
-  return result.lastInsertRowid as number;
-}
+// Removed: Now using getOrCreateHafidh and getOrCreateVenue from db.ts
 
 export const POST: APIRoute = async (context) => {
   // Check authentication
@@ -289,14 +253,11 @@ export const POST: APIRoute = async (context) => {
 
   lastFetchTimes.set(userId, now);
 
-  const db = new Database(dbPath);
-
   try {
     // Scrape YouTube videos
     const videos = await scrapeYouTubeVideos();
 
     if (videos.length === 0) {
-      db.close();
       return new Response(JSON.stringify({ error: "No videos found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" },
@@ -304,8 +265,7 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Default venue for YouTube videos
-    const defaultVenueId = getOrCreateVenue(
-      db,
+    const defaultVenueId = await getOrCreateVenue(
       "Aswaat-ul-Qurraa",
       "Cape Town",
     );
@@ -323,40 +283,40 @@ export const POST: APIRoute = async (context) => {
         }
 
         // Get or create hafidh
-        const hafidhId = getOrCreateHafidh(db, video.hafidh);
+        const hafidhId = await getOrCreateHafidh(video.hafidh);
 
         // Check if recording already exists
-        const existing = db
-          .prepare("SELECT id FROM recordings WHERE url = ?")
-          .get(video.url);
+        const existingResult = await db.execute({
+          sql: "SELECT id FROM recordings WHERE url = ?",
+          args: [video.url],
+        });
 
-        if (existing) {
+        if (existingResult.rows.length > 0) {
           skipped++;
           continue;
         }
 
-        // Insert recording
-        db.prepare(
-          `
-          INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
-          VALUES (?, ?, ?, ?, 'youtube', ?, ?)
-        `,
-        ).run(
-          hafidhId,
-          defaultVenueId,
-          video.hijriYear,
-          video.url,
-          video.section,
-          video.title,
-        );
+        // Insert recording with Hijri year directly from title
+        await db.execute({
+          sql: `
+            INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
+            VALUES (?, ?, ?, ?, 'youtube', ?, ?)
+          `,
+          args: [
+            hafidhId,
+            defaultVenueId,
+            video.hijriYear,
+            video.url,
+            video.section,
+            video.title,
+          ],
+        });
 
         imported++;
       } catch (error) {
         errors.push(`${video.title}: ${error}`);
       }
     }
-
-    db.close();
 
     return new Response(
       JSON.stringify({
@@ -370,7 +330,6 @@ export const POST: APIRoute = async (context) => {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
-    db.close();
     console.error("YouTube fetch error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch YouTube videos" }),

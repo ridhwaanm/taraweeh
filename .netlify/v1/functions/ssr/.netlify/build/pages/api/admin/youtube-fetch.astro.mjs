@@ -1,14 +1,9 @@
-import { g as getAuth } from '../../../chunks/auth_C8mkm74p.mjs';
-import Database from 'better-sqlite3';
-import { dirname, join } from 'path';
-import { fileURLToPath } from 'url';
+import { g as getAuth } from '../../../chunks/auth_CICup0Xc.mjs';
+import { e as getOrCreateVenue, f as getOrCreateHafidh, d as db } from '../../../chunks/db_D1q21JI7.mjs';
 import puppeteer from 'puppeteer';
 export { renderers } from '../../../renderers.mjs';
 
 const prerender = false;
-const __filename$1 = fileURLToPath(import.meta.url);
-const __dirname$1 = dirname(__filename$1);
-const dbPath = join(__dirname$1, "../../../../db/taraweeh.db");
 const lastFetchTimes = /* @__PURE__ */ new Map();
 const RATE_LIMIT_MS = 5 * 60 * 1e3;
 async function scrapeYouTubeVideos() {
@@ -148,22 +143,6 @@ async function scrapeYouTubeVideos() {
     throw error;
   }
 }
-function getOrCreateHafidh(db, name) {
-  const existing = db.prepare("SELECT id FROM huffadh WHERE name = ?").get(name);
-  if (existing) {
-    return existing.id;
-  }
-  const result = db.prepare("INSERT INTO huffadh (name) VALUES (?)").run(name);
-  return result.lastInsertRowid;
-}
-function getOrCreateVenue(db, name, city) {
-  const existing = db.prepare("SELECT id FROM venues WHERE name = ? AND city = ?").get(name, city);
-  if (existing) {
-    return existing.id;
-  }
-  const result = db.prepare("INSERT INTO venues (name, city) VALUES (?, ?)").run(name, city);
-  return result.lastInsertRowid;
-}
 const POST = async (context) => {
   const auth = getAuth();
   const session = await auth.api.getSession({
@@ -188,18 +167,15 @@ const POST = async (context) => {
     );
   }
   lastFetchTimes.set(userId, now);
-  const db = new Database(dbPath);
   try {
     const videos = await scrapeYouTubeVideos();
     if (videos.length === 0) {
-      db.close();
       return new Response(JSON.stringify({ error: "No videos found" }), {
         status: 404,
         headers: { "Content-Type": "application/json" }
       });
     }
-    const defaultVenueId = getOrCreateVenue(
-      db,
+    const defaultVenueId = await getOrCreateVenue(
       "Aswaat-ul-Qurraa",
       "Cape Town"
     );
@@ -213,31 +189,34 @@ const POST = async (context) => {
           skipped++;
           continue;
         }
-        const hafidhId = getOrCreateHafidh(db, video.hafidh);
-        const existing = db.prepare("SELECT id FROM recordings WHERE url = ?").get(video.url);
-        if (existing) {
+        const hafidhId = await getOrCreateHafidh(video.hafidh);
+        const existingResult = await db.execute({
+          sql: "SELECT id FROM recordings WHERE url = ?",
+          args: [video.url]
+        });
+        if (existingResult.rows.length > 0) {
           skipped++;
           continue;
         }
-        db.prepare(
-          `
-          INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
-          VALUES (?, ?, ?, ?, 'youtube', ?, ?)
-        `
-        ).run(
-          hafidhId,
-          defaultVenueId,
-          video.hijriYear,
-          video.url,
-          video.section,
-          video.title
-        );
+        await db.execute({
+          sql: `
+            INSERT INTO recordings (hafidh_id, venue_id, hijri_year, url, source, section, title)
+            VALUES (?, ?, ?, ?, 'youtube', ?, ?)
+          `,
+          args: [
+            hafidhId,
+            defaultVenueId,
+            video.hijriYear,
+            video.url,
+            video.section,
+            video.title
+          ]
+        });
         imported++;
       } catch (error) {
         errors.push(`${video.title}: ${error}`);
       }
     }
-    db.close();
     return new Response(
       JSON.stringify({
         success: true,
@@ -250,7 +229,6 @@ const POST = async (context) => {
       { status: 200, headers: { "Content-Type": "application/json" } }
     );
   } catch (error) {
-    db.close();
     console.error("YouTube fetch error:", error);
     return new Response(
       JSON.stringify({ error: "Failed to fetch YouTube videos" }),

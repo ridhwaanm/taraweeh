@@ -1,12 +1,5 @@
 import { betterAuth } from "better-auth";
-import Database from "better-sqlite3";
-import { dirname, join } from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-const dbPath = join(__dirname, "../../db/taraweeh.db");
+import { createClient } from "@libsql/client";
 
 export function getAuth() {
   // The environment variable check and use are now INSIDE the function.
@@ -17,8 +10,17 @@ export function getAuth() {
     );
   }
 
+  // Create Turso client for Better Auth
+  const client = createClient({
+    url: process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db",
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
+
   return betterAuth({
-    database: new Database(dbPath),
+    database: {
+      provider: "sqlite",
+      db: client as any, // Better Auth will use LibSQL client
+    },
     emailAndPassword: {
       enabled: true,
       // Require strong passwords
