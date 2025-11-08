@@ -4,7 +4,7 @@ import { B as Button, T as Table, a as TableHead, b as TableRow, c as TableHeade
 import { jsx, jsxs } from 'react/jsx-runtime';
 import { useState, useEffect } from 'react';
 import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { g as getAuth } from '../../chunks/auth_CICup0Xc.mjs';
+import { g as getAuth } from '../../chunks/auth_DIpvoUV_.mjs';
 export { renderers } from '../../renderers.mjs';
 
 function VenuesTable() {

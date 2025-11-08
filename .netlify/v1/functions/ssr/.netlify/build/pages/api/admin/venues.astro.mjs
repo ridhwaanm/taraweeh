@@ -1,4 +1,4 @@
-import { g as getAuth } from '../../../chunks/auth_CICup0Xc.mjs';
+import { g as getAuth } from '../../../chunks/auth_DIpvoUV_.mjs';
 import { h as getVenues, j as insertVenue, d as db } from '../../../chunks/db_D1q21JI7.mjs';
 export { renderers } from '../../../renderers.mjs';
 
