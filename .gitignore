@@ -27,3 +27,6 @@ pnpm-debug.log*
 db/*.db-shm
 db/*.db-wal
 !db/taraweeh.db
+
+# Local Netlify folder
+.netlify

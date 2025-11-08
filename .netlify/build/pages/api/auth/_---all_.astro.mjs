@@ -1,4 +1,4 @@
-import { g as getAuth } from '../../../chunks/auth_BXDk_B-t.mjs';
+import { g as getAuth } from '../../../chunks/auth_BTFUhMOl.mjs';
 export { renderers } from '../../../renderers.mjs';
 
 const prerender = false;

@@ -6,7 +6,7 @@ import { forwardRef, useState, useEffect } from 'react';
 import * as Headless from '@headlessui/react';
 import clsx from 'clsx';
 import { CloudArrowDownIcon, PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { g as getAuth } from '../../chunks/auth_BXDk_B-t.mjs';
+import { g as getAuth } from '../../chunks/auth_BTFUhMOl.mjs';
 export { renderers } from '../../renderers.mjs';
 
 const Select = forwardRef(function Select2({ className, multiple, ...props }, ref) {

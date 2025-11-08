@@ -24,7 +24,10 @@ export function getAuth() {
   });
 
   return betterAuth({
-    database: db, // Use Kysely with LibSQL dialect (works in serverless)
+    database: {
+      db: db,
+      type: "kysely",
+    },
     emailAndPassword: {
       enabled: true,
       // Require strong passwords
