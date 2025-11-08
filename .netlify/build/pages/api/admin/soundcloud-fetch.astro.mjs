@@ -7,7 +7,12 @@ const prerender = false;
 const lastFetchTimes = /* @__PURE__ */ new Map();
 const RATE_LIMIT_MS = 5 * 60 * 1e3;
 function parseTrackTitle(title, url) {
-  const parts = title.split(/\s*[\|]\s*|\s+-\s+(?=\S)/).map((p) => p.trim());
+  let parts;
+  if (title.includes("|")) {
+    parts = title.split(/\s*\|\s*/).map((p) => p.trim());
+  } else {
+    parts = title.split(/\s+-\s+(?=\S)/).map((p) => p.trim());
+  }
   let hafidh = "Unknown";
   let hijriYear = null;
   let section = null;

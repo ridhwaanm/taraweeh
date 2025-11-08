@@ -30,15 +30,22 @@ interface ParsedTrack {
  * Format 4: "Hafidh Name | Section Info | Taraweeh YYYY"
  *
  * Rules:
- * - Accepts both pipe (|) and dash (-) as separators
+ * - Prefer pipe (|) as separator if present in title
+ * - Only use dash (-) as separator if no pipes exist in title
  * - If part starts with "Surah" or "Night" -> section
  * - If part is "Taraweeh YYYY" -> extract year
  * - Remaining parts -> hafidh name
  */
 function parseTrackTitle(title: string, url: string): ParsedTrack {
-  // Split by pipe OR dash separators (but preserve dashes within parts like "43 - 93")
-  // Use regex to split on | or standalone - (with spaces around it)
-  const parts = title.split(/\s*[\|]\s*|\s+-\s+(?=\S)/).map((p) => p.trim());
+  // Determine separator: use pipe if present, otherwise use dash
+  let parts: string[];
+  if (title.includes("|")) {
+    // Split by pipe separator only
+    parts = title.split(/\s*\|\s*/).map((p) => p.trim());
+  } else {
+    // Split by standalone dash (with spaces around it) only if no pipes
+    parts = title.split(/\s+-\s+(?=\S)/).map((p) => p.trim());
+  }
 
   let hafidh = "Unknown";
   let hijriYear: number | null = null;
