@@ -313,15 +313,17 @@ function FilterSelect({
   ] }) });
 }
 
-const $$Index = createComponent(($$result, $$props, $$slots) => {
-  const recordings = getRecordings.all();
-  const huffadh = getHuffadh.all().map((h) => h.name);
-  const venues = getVenues.all().map((v) => v.name);
-  const cities = [...new Set(getVenues.all().map((v) => v.city))];
+const $$Index = createComponent(async ($$result, $$props, $$slots) => {
+  const recordings = await getRecordings.all();
+  const huffadhData = await getHuffadh.all();
+  const venuesData = await getVenues.all();
+  const huffadh = huffadhData.map((h) => h.name);
+  const venues = venuesData.map((v) => v.name);
+  const cities = [...new Set(venuesData.map((v) => v.city))];
   const years = [...new Set(recordings.map((r) => r.hijri_year))].sort(
     (a, b) => b - a
   );
-  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Taraweeh Recordings" }, { "default": ($$result2) => renderTemplate` ${renderComponent($$result2, "RecordingsPlayer", RecordingsPlayer, { "recordings": recordings, "huffadh": huffadh, "venues": venues, "cities": cities, "years": years, "client:load": true, "client:component-hydration": "load", "client:component-path": "/home/ridhwaanmayet/Documents/1_Projects/taraweeh/src/components/RecordingsPlayer", "client:component-export": "default" })} ` })}`;
+  return renderTemplate`${renderComponent($$result, "Layout", $$Layout, { "title": "Taraweeh Recordings" }, { "default": async ($$result2) => renderTemplate` ${renderComponent($$result2, "RecordingsPlayer", RecordingsPlayer, { "recordings": recordings, "huffadh": huffadh, "venues": venues, "cities": cities, "years": years, "client:load": true, "client:component-hydration": "load", "client:component-path": "/home/ridhwaanmayet/Documents/1_Projects/taraweeh/src/components/RecordingsPlayer", "client:component-export": "default" })} ` })}`;
 }, "/home/ridhwaanmayet/Documents/1_Projects/taraweeh/src/pages/index.astro", void 0);
 
 const $$file = "/home/ridhwaanmayet/Documents/1_Projects/taraweeh/src/pages/index.astro";

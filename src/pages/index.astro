@@ -4,10 +4,13 @@ import RecordingsPlayer from "../components/RecordingsPlayer";
 import { getRecordings, getHuffadh, getVenues } from "../lib/db";
 import type { RecordingWithDetails, Hafidh, Venue } from "../lib/db";
 
-const recordings = getRecordings.all() as RecordingWithDetails[];
-const huffadh = (getHuffadh.all() as Hafidh[]).map((h) => h.name);
-const venues = (getVenues.all() as Venue[]).map((v) => v.name);
-const cities = [...new Set((getVenues.all() as Venue[]).map((v) => v.city))];
+const recordings = (await getRecordings.all()) as RecordingWithDetails[];
+const huffadhData = (await getHuffadh.all()) as Hafidh[];
+const venuesData = (await getVenues.all()) as Venue[];
+
+const huffadh = huffadhData.map((h) => h.name);
+const venues = venuesData.map((v) => v.name);
+const cities = [...new Set(venuesData.map((v) => v.city))];
 const years = [...new Set(recordings.map((r) => r.hijri_year))].sort(
     (a, b) => b - a,
 );
