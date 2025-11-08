@@ -1,5 +1,7 @@
 import { betterAuth } from 'better-auth';
-import Database from 'libsql';
+import { Kysely } from 'kysely';
+import { LibsqlDialect } from 'kysely-libsql';
+import { createClient } from '@libsql/client';
 
 function getAuth() {
   if (!process.env.BETTER_AUTH_SECRET) {
@@ -7,12 +9,16 @@ function getAuth() {
       "BETTER_AUTH_SECRET environment variable is required. Generate one with: openssl rand -base64 48"
     );
   }
-  const dbUrl = process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db";
-  const authToken = process.env.TURSO_AUTH_TOKEN;
-  const db = new Database(dbUrl, { authToken });
+  const client = createClient({
+    url: process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db",
+    authToken: process.env.TURSO_AUTH_TOKEN
+  });
+  const db = new Kysely({
+    dialect: new LibsqlDialect({ client })
+  });
   return betterAuth({
     database: db,
-    // Use libsql Database instance (better-sqlite3 compatible)
+    // Use Kysely with LibSQL dialect (works in serverless)
     emailAndPassword: {
       enabled: true,
       // Require strong passwords

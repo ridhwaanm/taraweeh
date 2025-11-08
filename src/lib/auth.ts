@@ -1,5 +1,7 @@
 import { betterAuth } from "better-auth";
-import Database from "libsql";
+import { Kysely } from "kysely";
+import { LibsqlDialect } from "kysely-libsql";
+import { createClient } from "@libsql/client";
 
 export function getAuth() {
   // The environment variable check and use are now INSIDE the function.
@@ -10,16 +12,19 @@ export function getAuth() {
     );
   }
 
-  // Create Turso database connection using libsql (better-sqlite3 compatible)
-  // For remote Turso, use the connection string with auth token
-  const dbUrl = process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db";
-  const authToken = process.env.TURSO_AUTH_TOKEN;
+  // Create LibSQL client for Turso
+  const client = createClient({
+    url: process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db",
+    authToken: process.env.TURSO_AUTH_TOKEN,
+  });
 
-  // libsql Database constructor accepts URL and options (like authToken)
-  const db = new Database(dbUrl, { authToken });
+  // Create Kysely instance with LibSQL dialect
+  const db = new Kysely({
+    dialect: new LibsqlDialect({ client }),
+  });
 
   return betterAuth({
-    database: db, // Use libsql Database instance (better-sqlite3 compatible)
+    database: db, // Use Kysely with LibSQL dialect (works in serverless)
     emailAndPassword: {
       enabled: true,
       // Require strong passwords
