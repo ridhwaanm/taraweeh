@@ -1,5 +1,6 @@
 import { betterAuth } from "better-auth";
-import { createClient } from "libsql";
+import pkg from "libsql";
+const { createClient } = pkg;
 
 export function getAuth() {
   // The environment variable check and use are now INSIDE the function.

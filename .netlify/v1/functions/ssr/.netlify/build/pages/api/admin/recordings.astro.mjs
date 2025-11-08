@@ -1,4 +1,4 @@
-import { g as getAuth } from '../../../chunks/auth_DIpvoUV_.mjs';
+import { g as getAuth } from '../../../chunks/auth_BXYO-Ari.mjs';
 import { a as getRecordings, b as insertRecording, u as updateRecording, c as deleteRecording } from '../../../chunks/db_D1q21JI7.mjs';
 export { renderers } from '../../../renderers.mjs';
 

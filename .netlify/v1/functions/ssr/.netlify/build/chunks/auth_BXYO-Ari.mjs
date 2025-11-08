@@ -1,6 +1,7 @@
 import { betterAuth } from 'better-auth';
-import { createClient } from 'libsql';
+import pkg from 'libsql';
 
+const { createClient } = pkg;
 function getAuth() {
   if (!process.env.BETTER_AUTH_SECRET) {
     throw new Error(
