@@ -14,7 +14,7 @@ const GET = async (context) => {
     });
   }
   try {
-    const venues = getVenues.all();
+    const venues = await getVenues.all();
     return new Response(JSON.stringify(venues), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -44,9 +44,9 @@ const POST = async (context) => {
         { status: 400 }
       );
     }
-    const result = insertVenue.run(name, city);
+    const result = await insertVenue.run(name, city);
     return new Response(
-      JSON.stringify({ id: result.lastInsertRowid, name, city }),
+      JSON.stringify({ id: Number(result.lastInsertRowid), name, city }),
       {
         status: 201,
         headers: { "Content-Type": "application/json" }
@@ -82,10 +82,10 @@ const PUT = async (context) => {
         { status: 400 }
       );
     }
-    const stmt = db.prepare(
-      "UPDATE venues SET name = ?, city = ? WHERE id = ?"
-    );
-    stmt.run(name, city, id);
+    await db.execute({
+      sql: "UPDATE venues SET name = ?, city = ? WHERE id = ?",
+      args: [name, city, id]
+    });
     return new Response(JSON.stringify({ id, name, city }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -119,8 +119,10 @@ const DELETE = async (context) => {
         status: 400
       });
     }
-    const stmt = db.prepare("DELETE FROM venues WHERE id = ?");
-    stmt.run(id);
+    await db.execute({
+      sql: "DELETE FROM venues WHERE id = ?",
+      args: [id]
+    });
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" }

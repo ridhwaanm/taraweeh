@@ -54,7 +54,7 @@ function LoginForm() {
               autoComplete: "email",
               "aria-label": "Email address",
               disabled: loading,
-              className: "block w-full rounded-t-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
+              className: "block w-full rounded-t-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
             }
           ) }),
           /* @__PURE__ */ jsx("div", { className: "-mt-px", children: /* @__PURE__ */ jsx(
@@ -70,7 +70,7 @@ function LoginForm() {
               autoComplete: "current-password",
               "aria-label": "Password",
               disabled: loading,
-              className: "block w-full rounded-b-md bg-white px-3 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
+              className: "block w-full rounded-b-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
             }
           ) })
         ] }),
@@ -86,7 +86,7 @@ function LoginForm() {
                   name: "remember-me",
                   checked: rememberMe,
                   onChange: (e) => setRememberMe(e.target.checked),
-                  className: "col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-teal-600 checked:bg-teal-600 indeterminate:border-teal-600 indeterminate:bg-teal-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-teal-500 dark:checked:bg-teal-500 dark:indeterminate:border-teal-500 dark:indeterminate:bg-teal-500 dark:focus-visible:outline-teal-500 forced-colors:appearance-auto"
+                  className: "col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-teal-600 checked:bg-teal-600 indeterminate:border-teal-600 indeterminate:bg-teal-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-teal-500 dark:checked:bg-teal-500 dark:indeterminate:border-teal-500 dark:indeterminate:bg-teal-500 dark:focus-visible:outline-teal-500 forced-colors:appearance-auto"
                 }
               ),
               /* @__PURE__ */ jsx(
@@ -94,7 +94,7 @@ function LoginForm() {
                 {
                   viewBox: "0 0 14 14",
                   fill: "none",
-                  className: "pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-[:disabled]:stroke-gray-950/25",
+                  className: "pointer-events-none col-start-1 row-start-1 size-3.5 self-center justify-self-center stroke-white group-has-disabled:stroke-gray-950/25",
                   children: /* @__PURE__ */ jsx(
                     "path",
                     {
@@ -102,7 +102,7 @@ function LoginForm() {
                       strokeWidth: "2",
                       strokeLinecap: "round",
                       strokeLinejoin: "round",
-                      className: "opacity-0 group-has-[:checked]:opacity-100"
+                      className: "opacity-0 group-has-checked:opacity-100"
                     }
                   )
                 }
@@ -131,7 +131,7 @@ function LoginForm() {
           {
             type: "submit",
             disabled: loading,
-            className: "flex w-full justify-center rounded-md bg-teal-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-teal-500 dark:shadow-none dark:hover:bg-teal-400 dark:focus-visible:outline-teal-500",
+            className: "flex w-full justify-center rounded-md bg-teal-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-teal-500 dark:shadow-none dark:hover:bg-teal-400 dark:focus-visible:outline-teal-500",
             children: loading ? "Signing in..." : "Sign in"
           }
         ) })

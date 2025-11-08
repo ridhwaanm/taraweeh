@@ -276,14 +276,16 @@ async function importVideosToDatabase(videos: VideoData[]) {
     let skipped = 0;
 
     // Get or create default venue
-    let defaultVenueId = getDefaultVenue.get()?.id;
+    let defaultVenueRow = getDefaultVenue.get() as { id: number } | undefined;
+    let defaultVenueId = defaultVenueRow?.id;
     if (!defaultVenueId) {
       db.prepare(
         `
         INSERT INTO venues (name, city) VALUES ('Unknown', 'Unknown')
       `,
       ).run();
-      defaultVenueId = getDefaultVenue.get()?.id;
+      defaultVenueRow = getDefaultVenue.get() as { id: number } | undefined;
+      defaultVenueId = defaultVenueRow?.id;
     }
 
     for (const video of videos) {

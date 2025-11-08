@@ -14,7 +14,7 @@ const GET = async (context) => {
     });
   }
   try {
-    const recordings = getRecordings.all();
+    const recordings = await getRecordings.all();
     return new Response(JSON.stringify(recordings), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -47,7 +47,7 @@ const POST = async (context) => {
         { status: 400 }
       );
     }
-    const result = insertRecording.run(
+    const result = await insertRecording.run(
       hafidh_id,
       venue_id,
       hijri_year,
@@ -58,7 +58,7 @@ const POST = async (context) => {
     );
     return new Response(
       JSON.stringify({
-        id: result.lastInsertRowid,
+        id: Number(result.lastInsertRowid),
         hafidh_id,
         venue_id,
         hijri_year,
@@ -115,7 +115,7 @@ const PUT = async (context) => {
         { status: 400 }
       );
     }
-    updateRecording.run(
+    await updateRecording.run(
       hafidh_id,
       venue_id,
       hijri_year,
@@ -172,7 +172,7 @@ const DELETE = async (context) => {
         status: 400
       });
     }
-    deleteRecording.run(id);
+    await deleteRecording.run(id);
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" }

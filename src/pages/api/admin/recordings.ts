@@ -22,7 +22,7 @@ export const GET: APIRoute = async (context) => {
   }
 
   try {
-    const recordings = getRecordings.all();
+    const recordings = await getRecordings.all();
     return new Response(JSON.stringify(recordings), {
       status: 200,
       headers: { "Content-Type": "application/json" },
@@ -60,7 +60,7 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const result = insertRecording.run(
+    const result = await insertRecording.run(
       hafidh_id,
       venue_id,
       hijri_year,
@@ -71,7 +71,7 @@ export const POST: APIRoute = async (context) => {
     );
     return new Response(
       JSON.stringify({
-        id: result.lastInsertRowid,
+        id: Number(result.lastInsertRowid),
         hafidh_id,
         venue_id,
         hijri_year,
@@ -132,7 +132,7 @@ export const PUT: APIRoute = async (context) => {
       );
     }
 
-    updateRecording.run(
+    await updateRecording.run(
       hafidh_id,
       venue_id,
       hijri_year,
@@ -194,7 +194,7 @@ export const DELETE: APIRoute = async (context) => {
       });
     }
 
-    deleteRecording.run(id);
+    await deleteRecording.run(id);
 
     return new Response(JSON.stringify({ success: true }), {
       status: 200,

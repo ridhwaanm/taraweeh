@@ -14,7 +14,7 @@ const GET = async (context) => {
     });
   }
   try {
-    const huffadh = getHuffadh.all();
+    const huffadh = await getHuffadh.all();
     return new Response(JSON.stringify(huffadh), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -43,11 +43,14 @@ const POST = async (context) => {
         status: 400
       });
     }
-    const result = insertHafidh.run(name);
-    return new Response(JSON.stringify({ id: result.lastInsertRowid, name }), {
-      status: 201,
-      headers: { "Content-Type": "application/json" }
-    });
+    const result = await insertHafidh.run(name);
+    return new Response(
+      JSON.stringify({ id: Number(result.lastInsertRowid), name }),
+      {
+        status: 201,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
   } catch (error) {
     if (error?.message?.includes("UNIQUE")) {
       return new Response(JSON.stringify({ error: "Hafidh already exists" }), {
@@ -78,8 +81,10 @@ const PUT = async (context) => {
         { status: 400 }
       );
     }
-    const stmt = db.prepare("UPDATE huffadh SET name = ? WHERE id = ?");
-    stmt.run(name, id);
+    await db.execute({
+      sql: "UPDATE huffadh SET name = ? WHERE id = ?",
+      args: [name, id]
+    });
     return new Response(JSON.stringify({ id, name }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
@@ -114,8 +119,10 @@ const DELETE = async (context) => {
         status: 400
       });
     }
-    const stmt = db.prepare("DELETE FROM huffadh WHERE id = ?");
-    stmt.run(id);
+    await db.execute({
+      sql: "DELETE FROM huffadh WHERE id = ?",
+      args: [id]
+    });
     return new Response(JSON.stringify({ success: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" }
