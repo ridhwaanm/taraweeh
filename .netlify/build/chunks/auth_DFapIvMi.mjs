@@ -1,20 +1,18 @@
 import { betterAuth } from 'better-auth';
-import pkg from 'libsql';
+import Database from 'libsql';
 
-const { createClient } = pkg;
 function getAuth() {
   if (!process.env.BETTER_AUTH_SECRET) {
     throw new Error(
       "BETTER_AUTH_SECRET environment variable is required. Generate one with: openssl rand -base64 48"
     );
   }
-  const db = createClient({
-    url: process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db",
-    authToken: process.env.TURSO_AUTH_TOKEN
-  });
+  const dbUrl = process.env.TURSO_DATABASE_URL || "file:db/taraweeh.db";
+  const authToken = process.env.TURSO_AUTH_TOKEN;
+  const db = new Database(dbUrl, { authToken });
   return betterAuth({
     database: db,
-    // Use libsql client directly (better-sqlite3 compatible)
+    // Use libsql Database instance (better-sqlite3 compatible)
     emailAndPassword: {
       enabled: true,
       // Require strong passwords
