@@ -301,22 +301,27 @@ export function RecordingsTable() {
           Recordings
         </h2>
         <div className="flex gap-2">
-          <Button
-            onClick={handleFetchFromYouTube}
-            color="red"
-            disabled={isFetchingYouTube || isFetchingSoundCloud}
-          >
-            <CloudArrowDownIcon data-slot="icon" />
-            {isFetchingYouTube ? "Fetching..." : "Fetch from YouTube"}
-          </Button>
-          <Button
-            onClick={handleFetchFromSoundCloud}
-            color="teal"
-            disabled={isFetchingSoundCloud || isFetchingYouTube}
-          >
-            <CloudArrowDownIcon data-slot="icon" />
-            {isFetchingSoundCloud ? "Fetching..." : "Fetch from SoundCloud"}
-          </Button>
+          {/* Fetch buttons only available in development (Puppeteer doesn't work on Netlify) */}
+          {import.meta.env.DEV && (
+            <>
+              <Button
+                onClick={handleFetchFromYouTube}
+                color="red"
+                disabled={isFetchingYouTube || isFetchingSoundCloud}
+              >
+                <CloudArrowDownIcon data-slot="icon" />
+                {isFetchingYouTube ? "Fetching..." : "Fetch from YouTube"}
+              </Button>
+              <Button
+                onClick={handleFetchFromSoundCloud}
+                color="teal"
+                disabled={isFetchingSoundCloud || isFetchingYouTube}
+              >
+                <CloudArrowDownIcon data-slot="icon" />
+                {isFetchingSoundCloud ? "Fetching..." : "Fetch from SoundCloud"}
+              </Button>
+            </>
+          )}
           <Button onClick={openCreate} color="indigo">
             <PlusIcon data-slot="icon" />
             Add Recording
