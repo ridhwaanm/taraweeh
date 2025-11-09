@@ -3,8 +3,8 @@
 /* Arabic Font - KFGQPC Uthmanic Script HAFS */
 @font-face {
     font-family: "KFGQPC Uthmanic Script HAFS";
-    src: url("https://arabicfonts.net/fonts/kfgqpc-uthmanic-script-hafs-regular/KFGQPC-Uthmanic-Script-HAFS-Regular.ttf")
-        format("truetype");
+    src: url("/fonts/KFGQPC Uthmanic Script HAFS Regular.otf")
+        format("opentype");
     font-weight: normal;
     font-style: normal;
     font-display: swap;
