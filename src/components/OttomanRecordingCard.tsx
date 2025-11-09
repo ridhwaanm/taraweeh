@@ -1,4 +1,3 @@
-import { IslamicStar } from "./patterns/OttomanBorder";
 import type { RecordingWithDetails } from "../lib/db";
 
 interface OttomanRecordingCardProps {
@@ -6,64 +5,85 @@ interface OttomanRecordingCardProps {
   onPlay: (recording: RecordingWithDetails) => void;
 }
 
+// Turkish corner ornament component
+function TurkishCorner({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 59122.719 59311.883"
+      fill="currentColor"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path d="m 46447.01,6672.93 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -966.29,-966.29 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -966.29,966.29 966.29,966.29 h 1766.6 c 220.91,0 400,179.09 400,400 v 1766.6 l 966.29,966.29 966.29,-966.29 v -1766.6 c 0,-220.91 179.09,-400 400,-400 z M 14027.54,2668.33 c 138.07,0 250,111.93 250,250 0,138.07 -111.93,250 -250,250 H 4120.59 c -138.07,0 -250,-111.93 -250,-250 0,-138.07 111.93,-250 250,-250 z m 2965.1,-2032.97 c 25.97,0 51.36,2.52 75.95,7.24 109.99,-6.38 222.11,32.4 306.14,116.43 L 18738.4,2122.7 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.71,39.09 282.81,117.19 l 1083.48,1083.48 1080.86,-1080.86 c 72.58,-73.93 173.64,-119.81 285.43,-119.81 h 1532.22 V 2408.13 c 0.05,-102.36 39.09,-204.72 117.19,-282.81 L 26138.71,759.03 c 156.19,-156.19 409.43,-156.19 565.62,0 l 1366.29,1366.29 c 78.09,78.09 117.14,180.45 117.14,282.81 l 0.05,1532.22 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 l 1080.86,1080.86 1083.48,-1083.48 c 78.1,-78.1 180.45,-117.14 282.81,-117.14 l 1532.22,-0.05 V 2408.13 c 0,-111.79 45.88,-212.85 119.81,-285.43 L 35468.31,759.03 c 156.19,-156.19 409.43,-156.19 565.62,0 L 37397.6,2122.7 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.72,39.09 282.81,117.19 l 1083.48,1083.48 1080.86,-1080.86 c 72.58,-73.93 173.64,-119.81 285.43,-119.81 h 1532.22 V 2408.13 c 0.05,-102.36 39.1,-204.72 117.19,-282.81 L 44797.91,759.03 c 156.19,-156.19 409.43,-156.19 565.62,0 l 1366.29,1366.29 c 78.1,78.09 117.14,180.45 117.14,282.81 l 0.05,1532.22 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 L 49745.52,5141.02 50829,4057.54 c 78.1,-78.1 180.45,-117.14 282.81,-117.14 l 1532.22,-0.05 V 2408.13 c 0,-111.79 45.88,-212.85 119.81,-285.43 L 54077.66,808.88 c -12.64,-116.32 25.59,-237.11 114.76,-326.28 156.19,-156.19 409.43,-156.19 565.62,0 l 1363.67,1363.67 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.72,39.09 282.81,117.19 l 1366.29,1366.29 c 137.76,137.76 153.99,351 48.74,506.58 15.74,119.11 -22.13,243.95 -113.65,335.47 l -1366.29,1366.29 c -78.09,78.09 -180.45,117.14 -282.81,117.14 l -1532.22,0.05 v 1532.22 c 0,111.79 -45.88,212.85 -119.81,285.43 l -1080.86,1080.86 1083.48,1083.48 c 78.1,78.09 117.14,180.45 117.14,282.81 l 0.05,1532.22 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 l 1363.67,1363.67 c 156.19,156.19 156.19,409.43 0,565.62 l -1363.67,1363.67 c -72.58,73.93 -173.64,119.81 -285.43,119.81 h -1532.22 v 1532.22 c -0.05,102.36 -39.09,204.71 -117.19,282.81 l -1083.48,1083.48 1080.86,1080.86 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.72,39.09 282.81,117.19 l 1366.29,1366.29 c 156.19,156.19 156.19,409.43 0,565.62 l -1366.29,1366.29 c -78.09,78.09 -180.45,117.14 -282.81,117.14 l -1532.22,0.05 v 1532.22 c 0,111.79 -45.88,212.85 -119.81,285.43 l -1080.86,1080.86 1083.48,1083.48 c 78.1,78.09 117.14,180.45 117.14,282.81 l 0.05,1532.22 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 l 1363.67,1363.67 c 156.19,156.19 156.19,409.43 0,565.62 l -1363.67,1363.67 c -72.58,73.93 -173.64,119.81 -285.43,119.81 h -1532.22 v 1532.22 c -0.05,102.36 -39.09,204.72 -117.19,282.81 l -1083.48,1083.48 1080.86,1080.86 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.72,39.1 282.81,117.19 l 1366.29,1366.29 c 50.14,50.14 84.15,110.29 102.1,174.01 29.15,55.5 45.67,118.67 45.67,185.71 v 16175.39 c 0,220.91 -179.09,400 -400,400 -220.91,0 -400,-179.09 -400,-400 v -16056.1 l -1162.49,-1162.49 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -1249.1,-1249.1 c -156.19,-156.19 -156.19,-409.43 0,-565.62 l 1249.1,-1249.1 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -1249.1,-1249.1 c -156.19,-156.19 -156.19,-409.43 0,-565.62 l 1249.1,-1249.1 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -966.29,-966.29 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -1249.1,1249.1 c -156.19,156.19 -409.43,156.19 -565.62,0 l -1249.1,-1249.1 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -1249.1,-1249.1 c -156.19,-156.19 -156.19,-409.43 0,-565.62 l 1249.1,-1249.1 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -966.29,-966.29 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -1249.1,1249.1 c -156.19,156.19 -409.43,156.19 -565.62,0 l -1249.1,-1249.1 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -1249.1,-1249.1 c -156.19,-156.19 -156.19,-409.43 0,-565.62 l 1249.1,-1249.1 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -966.29,-966.29 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -1249.1,1249.1 c -156.19,156.19 -409.43,156.19 -565.62,0 l -1249.1,-1249.1 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -966.29,-966.29 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -1249.1,1249.1 c -156.19,156.19 -409.43,156.19 -565.62,0 l -1249.1,-1249.1 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 V 2573.75 L 16919.82,1435.36 H 817.25 c -220.91,0 -400,-179.09 -400,-400 0,-220.91 179.09,-400 400,-400 z M 57617.8,56566.85 c 0,138.07 -111.93,250 -250,250 -138.07,0 -250,-111.93 -250,-250 V 46659.9 c 0,-138.07 111.93,-250 250,-250 138.07,0 250,111.93 250,250 z M 48379.23,7472.93 h -1532.22 v 1532.22 c -0.05,102.36 -39.09,204.71 -117.19,282.81 l -1083.48,1083.48 1080.86,1080.86 c 73.93,72.58 119.81,173.64 119.81,285.43 v 1532.22 h 1532.22 c 102.36,0.05 204.72,39.09 282.81,117.19 l 1083.48,1083.48 1080.86,-1080.86 c 72.58,-73.93 173.64,-119.81 285.43,-119.81 h 1532.22 v -1532.22 c 0.05,-102.36 39.1,-204.72 117.19,-282.81 L 53844.7,10371.44 52763.84,9290.58 c -73.93,-72.58 -119.81,-173.64 -119.81,-285.43 V 7472.93 h -1532.22 c -102.36,-0.05 -204.71,-39.1 -282.81,-117.19 L 49745.52,6272.26 48664.66,7353.12 c -72.58,73.93 -173.64,119.81 -285.43,119.81 z m 1931.91,-1766.29 966.29,966.29 h 1766.6 c 220.91,0 400,179.09 400,400 v 1766.6 l 966.29,966.29 966.29,-966.29 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 L 58680.17,5535.97 57608.12,4463.92 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 l -860.53,-860.53 -1136.96,1136.96 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 z m 4099.18,5230.42 -966.29,966.29 v 1766.6 c 0,220.91 -179.09,400 -400,400 h -1766.6 l -966.29,966.29 966.29,966.29 h 1766.6 c 220.91,0 400,179.09 400,400 v 1766.6 l 966.29,966.29 966.29,-966.29 v -1766.6 c 0,-220.91 179.09,-400 400,-400 h 1766.6 l 966.29,-966.29 -966.29,-966.29 h -1766.6 c -220.91,0 -400,-179.09 -400,-400 v -1766.6 z M 43314.43,7472.93 h -1532.22 c -111.79,0 -212.85,-45.88 -285.43,-119.81 L 40415.92,6272.26 39332.44,7355.74 c -78.09,78.09 -180.45,117.14 -282.81,117.14 l -1532.22,0.05 v 1532.22 c 0,111.79 -45.88,212.85 -119.81,285.43 l -1080.86,1080.86 1083.48,1083.48 c 78.1,78.09 117.14,180.45 117.14,282.81 l 0.05,1532.22 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 l 1080.86,1080.86 1083.48,-1083.48 c 78.1,-78.1 180.45,-117.14 282.81,-117.14 l 1532.22,-0.05 v -1532.22 c 0,-111.79 45.88,-212.85 119.81,-285.43 L 44515.1,10371.44 43431.62,9287.96 c -78.09,-78.1 -117.14,-180.45 -117.14,-282.81 z m 3532.58,15126.62 h 1532.22 c 111.79,0 212.85,45.88 285.43,119.81 l 1080.86,1080.86 1083.48,-1083.48 c 78.1,-78.1 180.45,-117.14 282.81,-117.14 l 1532.22,-0.05 v -1532.22 c 0,-111.79 45.88,-212.85 119.81,-285.43 l 1080.86,-1080.86 -1083.48,-1083.48 c -78.09,-78.1 -117.14,-180.45 -117.14,-282.81 l -0.05,-1532.22 h -1532.22 c -111.79,0 -212.85,-45.88 -285.43,-119.81 l -1080.86,-1080.86 -1083.48,1083.48 c -78.09,78.09 -180.45,117.14 -282.81,117.14 l -1532.22,0.05 v 1532.22 c 0,111.79 -45.88,212.85 -119.81,285.43 l -1080.86,1080.86 1083.48,1083.48 c 78.1,78.09 117.14,180.45 117.14,282.81 z" />
+    </svg>
+  );
+}
+
 export function OttomanRecordingCard({
   recording,
   onPlay,
 }: OttomanRecordingCardProps) {
-  const getSourceColor = (source: string) => {
-    switch (source.toLowerCase()) {
-      case "youtube":
-        return "from-red-500/10 to-red-600/5 border-red-500/20 hover:border-red-500/40";
-      case "soundcloud":
-        return "from-orange-500/10 to-orange-600/5 border-orange-500/20 hover:border-orange-500/40";
-      default:
-        return "from-teal-500/10 to-teal-600/5 border-teal-500/20 hover:border-teal-500/40";
-    }
-  };
-
   return (
     <button
       onClick={() => onPlay(recording)}
       className="group relative w-full text-left transition-all duration-300 hover:-translate-y-1"
     >
-      {/* Ottoman corner decorations */}
-      <div className="absolute -top-2 -left-2 w-8 h-8 text-amber-600 dark:text-amber-400 opacity-40 transition-opacity group-hover:opacity-70">
-        <IslamicStar className="w-full h-full" />
-      </div>
-      <div className="absolute -top-2 -right-2 w-8 h-8 text-amber-600 dark:text-amber-400 opacity-40 rotate-90 transition-opacity group-hover:opacity-70">
-        <IslamicStar className="w-full h-full" />
-      </div>
-      <div className="absolute -bottom-2 -left-2 w-8 h-8 text-amber-600 dark:text-amber-400 opacity-40 -rotate-90 transition-opacity group-hover:opacity-70">
-        <IslamicStar className="w-full h-full" />
-      </div>
-      <div className="absolute -bottom-2 -right-2 w-8 h-8 text-amber-600 dark:text-amber-400 opacity-40 rotate-180 transition-opacity group-hover:opacity-70">
-        <IslamicStar className="w-full h-full" />
-      </div>
-
       {/* Card with Ottoman border */}
-      <div
-        className={`
-          relative overflow-hidden rounded-lg border-2 bg-gradient-to-br
-          ${getSourceColor(recording.source)}
-          backdrop-blur-sm transition-all duration-300
-          hover:shadow-2xl hover:shadow-amber-500/20
-          dark:border-amber-700/30
-        `}
-      >
-        {/* Geometric pattern overlay */}
-        <div
-          className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity"
-          style={{
-            backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px),
-                             repeating-linear-gradient(-45deg, transparent, transparent 10px, currentColor 10px, currentColor 11px)`,
-          }}
-        />
+      <div className="relative overflow-visible rounded-lg border-2 border-cyan-600/30 bg-gradient-to-br from-cyan-50/80 to-blue-50/80 dark:from-cyan-950/20 dark:to-blue-950/20 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl hover:shadow-cyan-500/20 hover:border-cyan-600/50">
+        {/* Turkish corner ornaments - inside the card, parallel to edges */}
+        {/* Top-left corner - flip horizontally */}
+        <div className="absolute top-2 left-2 w-16 h-16 text-cyan-600 dark:text-cyan-400 opacity-40 transition-opacity group-hover:opacity-70 pointer-events-none scale-x-[-1]">
+          <TurkishCorner className="w-full h-full" />
+        </div>
+        {/* Top-right corner - no flip */}
+        <div className="absolute top-2 right-2 w-16 h-16 text-cyan-600 dark:text-cyan-400 opacity-40 transition-opacity group-hover:opacity-70 pointer-events-none">
+          <TurkishCorner className="w-full h-full" />
+        </div>
+        {/* Bottom-left corner - flip both */}
+        <div className="absolute bottom-2 left-2 w-16 h-16 text-cyan-600 dark:text-cyan-400 opacity-40 transition-opacity group-hover:opacity-70 pointer-events-none scale-[-1]">
+          <TurkishCorner className="w-full h-full" />
+        </div>
+        {/* Bottom-right corner - flip vertically */}
+        <div className="absolute bottom-2 right-2 w-16 h-16 text-cyan-600 dark:text-cyan-400 opacity-40 transition-opacity group-hover:opacity-70 pointer-events-none scale-y-[-1]">
+          <TurkishCorner className="w-full h-full" />
+        </div>
+        {/* Rub el Hizb pattern overlay */}
+        <svg
+          className="absolute inset-0 w-full h-full pointer-events-none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <defs>
+            <pattern
+              id={`rubElHizb-${recording.id}`}
+              x="0"
+              y="0"
+              width="60"
+              height="60"
+              patternUnits="userSpaceOnUse"
+            >
+              {/* Authentic Rub el Hizb symbol */}
+              <g transform="translate(30, 30) scale(6)">
+                <path
+                  d="M 4.2275996,2.3736671e-5 A 0.26460982,0.26460982 0 0 0 4.0456985,0.07805515 L 3.0648799,1.0588738 H 1.3213171 A 0.26460982,0.26460982 0 0 0 1.0577672,1.3224237 v 1.743563 L 0.07694857,4.0468053 a 0.26460982,0.26460982 0 0 0 0,0.3731038 L 1.0577672,5.4007277 v 1.7440796 a 0.26460982,0.26460982 0 0 0 0.2635499,0.2635499 h 1.7440795 l 0.9803019,0.9803019 a 0.26460982,0.26460982 0 0 0 0.3731038,0 L 5.3991042,7.4083572 H 7.1437006 A 0.26460982,0.26460982 0 0 0 7.4072505,7.1448073 V 5.400211 L 8.3875524,4.4199091 a 0.26460982,0.26460982 0 0 0 0,-0.3731038 L 7.4072505,3.0665034 V 1.3224237 A 0.26460982,0.26460982 0 0 0 7.1437006,1.0588738 H 5.399621 L 4.4188023,0.07805515 A 0.26460982,0.26460982 0 0 0 4.2275996,2.3736671e-5 Z M 4.2312164,0.63874444 4.6513457,1.0588738 H 3.8110875 Z M 1.5869339,1.5880405 H 2.5357132 L 1.5869339,2.5368198 Z m 1.6949869,0 H 5.1810299 L 6.8775671,3.2835443 V 5.1816196 L 5.1805129,6.8786738 H 3.2814041 L 1.5869339,5.185237 V 3.2830276 Z m 2.6468668,0 H 6.8775671 V 2.5368198 Z M 1.0577672,3.8121942 V 4.6565871 L 0.6355708,4.2343907 Z M 7.4072505,3.8127234 7.8268632,4.2323362 7.4072505,4.6519487 Z M 1.5869339,5.9298944 2.5357132,6.8786738 H 1.5869339 Z m 5.2906332,0 V 6.8786738 H 5.9287876 Z M 3.8116042,7.4083572 H 4.6508295 L 4.231217,7.82797 Z"
+                  fill="#bae6fd"
+                  opacity="0.3"
+                  transform="translate(-4.23, -4.23)"
+                />
+              </g>
+            </pattern>
+          </defs>
+          <rect
+            width="100%"
+            height="100%"
+            fill={`url(#rubElHizb-${recording.id})`}
+          />
+        </svg>
 
         {/* Card content */}
         <div className="relative p-6">
           {/* Header with Hafidh name */}
-          <div className="mb-4 border-b-2 border-amber-600/20 pb-3">
-            <h3 className="text-xl font-bold text-amber-900 dark:text-amber-100 font-serif line-clamp-1 group-hover:text-amber-700 dark:group-hover:text-amber-200 transition-colors">
+          <div className="mb-4 border-b-2 border-cyan-600/20 pb-3">
+            <h3 className="text-xl font-bold text-cyan-900 dark:text-cyan-100 font-serif line-clamp-1 group-hover:text-cyan-700 dark:group-hover:text-cyan-200 transition-colors">
               {recording.hafidh_name}
             </h3>
             <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-1 line-clamp-1">
@@ -75,7 +95,7 @@ export function OttomanRecordingCard({
           <div className="space-y-2">
             {/* Year */}
             <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider">
                 Year
               </span>
               <span className="text-sm text-zinc-700 dark:text-zinc-300 font-bold">
@@ -86,7 +106,7 @@ export function OttomanRecordingCard({
             {/* Section */}
             {recording.section && (
               <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                <span className="text-xs font-semibold text-cyan-700 dark:text-cyan-400 uppercase tracking-wider">
                   Section
                 </span>
                 <span className="text-sm text-zinc-700 dark:text-zinc-300 line-clamp-1">
@@ -95,11 +115,8 @@ export function OttomanRecordingCard({
               </div>
             )}
 
-            {/* Source badge */}
-            <div className="flex items-center justify-between pt-2">
-              <span className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
-                Source
-              </span>
+            {/* Source badge - label removed, just show platform */}
+            <div className="flex items-center justify-end pt-2">
               <span
                 className={`
                 inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase
@@ -116,7 +133,7 @@ export function OttomanRecordingCard({
           </div>
 
           {/* Play indicator */}
-          <div className="mt-4 pt-4 border-t-2 border-amber-600/20 flex items-center justify-center">
+          <div className="mt-4 pt-4 border-t-2 border-cyan-600/20 flex items-center justify-center">
             <div className="flex items-center gap-2 text-teal-700 dark:text-teal-300 font-semibold">
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
@@ -127,11 +144,11 @@ export function OttomanRecordingCard({
         </div>
 
         {/* Decorative border accents */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-600/30 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-amber-600/30 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-600/30 to-transparent" />
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-600/30 to-transparent" />
 
         {/* Hover glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-400/0 to-amber-600/0 group-hover:from-amber-400/5 group-hover:to-amber-600/5 transition-all duration-300 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/0 to-cyan-600/0 group-hover:from-cyan-400/5 group-hover:to-cyan-600/5 transition-all duration-300 pointer-events-none" />
       </div>
     </button>
   );
