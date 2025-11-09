@@ -30,6 +30,7 @@ export default function OttomanRecordingsPlayer({
   const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
   const [hafidhSearch, setHafidhSearch] = useState<string>("");
   const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [showMobileSearch, setShowMobileSearch] = useState<boolean>(false);
   const [currentRecording, setCurrentRecording] =
     useState<RecordingWithDetails | null>(null);
 
@@ -86,12 +87,49 @@ export default function OttomanRecordingsPlayer({
         <ArabesquePattern className="w-full h-full text-blue-700" />
       </div>
 
-      {/* Ottoman Header - Çini Blue */}
-      <div className="relative sticky top-0 z-20 bg-gradient-to-r from-blue-900 via-cyan-800 to-teal-900 dark:from-blue-950 dark:via-cyan-950 dark:to-teal-950 border-b-4 border-cyan-600 shadow-2xl">
+      {/* Ottoman Header - Çini Blue - Different layouts for mobile/desktop */}
+      <div className="relative md:sticky top-0 z-20 bg-gradient-to-r from-blue-900 via-cyan-800 to-teal-900 dark:from-blue-950 dark:via-cyan-950 dark:to-teal-950 border-b-4 border-cyan-600 shadow-2xl">
         {/* Decorative top border */}
         <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-cyan-400 to-transparent" />
 
-        <div className="container mx-auto px-4 py-8">
+        {/* Mobile Header - Logo + Search Icon */}
+        <div className="md:hidden container mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            {/* Logo */}
+            <div className="relative">
+              <div className="absolute -inset-1 bg-cyan-400/20 blur-lg" />
+              <img
+                src="/logo.png"
+                alt="Taraweeh"
+                className="relative h-12 w-12 drop-shadow-xl"
+              />
+            </div>
+
+            {/* Search Icon */}
+            <button
+              onClick={() => setShowMobileSearch(true)}
+              className="p-2 rounded-full bg-cyan-600/30 hover:bg-cyan-600/50 transition-colors"
+              aria-label="Search"
+            >
+              <svg
+                className="w-6 h-6 text-cyan-50"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        {/* Desktop Header - Full with inline filters */}
+        <div className="hidden md:block container mx-auto px-4 py-8">
           {/* Logo and Title */}
           <div className="flex items-center justify-center gap-6 mb-8">
             <div className="relative">
@@ -103,7 +141,7 @@ export default function OttomanRecordingsPlayer({
               />
             </div>
             <div className="text-center">
-              <h1 className="text-5xl md:text-6xl font-bold text-cyan-50 font-serif mb-2 drop-shadow-lg">
+              <h1 className="text-5xl lg:text-6xl font-bold text-cyan-50 font-serif mb-2 drop-shadow-lg">
                 Taraweeh
               </h1>
               <p className="text-cyan-100 text-lg font-medium tracking-wide">
@@ -243,6 +281,176 @@ export default function OttomanRecordingsPlayer({
         {/* Decorative bottom border */}
         <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-600 to-transparent" />
       </div>
+
+      {/* Mobile Search Overlay */}
+      {showMobileSearch && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+          <div className="bg-gradient-to-r from-blue-900 via-cyan-800 to-teal-900 min-h-screen">
+            <div className="container mx-auto px-4 py-4">
+              {/* Header with close button */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-xl font-bold text-cyan-50 font-serif">
+                  Search Recordings
+                </h2>
+                <button
+                  onClick={() => setShowMobileSearch(false)}
+                  className="p-2 rounded-full bg-cyan-600/30 hover:bg-cyan-600/50 transition-colors"
+                  aria-label="Close search"
+                >
+                  <svg
+                    className="w-6 h-6 text-cyan-50"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Hafidh Search with Suggestions */}
+              <div className="relative mb-4">
+                <label className="block text-sm font-bold text-cyan-200 mb-2">
+                  القارئ • Hafidh
+                </label>
+
+                {/* Search bar with inline filter button */}
+                <div className="flex gap-2">
+                  {/* Search Input */}
+                  <div className="relative flex-1">
+                    <div className="absolute -top-1 -left-1 w-3 h-3 border-t-2 border-l-2 border-cyan-400" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 border-t-2 border-r-2 border-cyan-400" />
+                    <div className="absolute -bottom-1 -left-1 w-3 h-3 border-b-2 border-l-2 border-cyan-400" />
+                    <div className="absolute -bottom-1 -right-1 w-3 h-3 border-b-2 border-r-2 border-cyan-400" />
+
+                    <input
+                      type="text"
+                      value={hafidhSearch}
+                      onChange={(e) => setHafidhSearch(e.target.value)}
+                      onFocus={() => setShowSuggestions(true)}
+                      placeholder={selectedHafidh || "Search for a Hafidh..."}
+                      className="w-full px-4 py-3 pr-10 bg-cyan-50 dark:bg-zinc-800 border-2 border-cyan-600/50 rounded-md text-cyan-900 dark:text-cyan-100 font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent transition-all duration-200"
+                      autoFocus
+                    />
+
+                    {/* Suggestions dropdown */}
+                    {showSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-white dark:bg-zinc-800 border-2 border-cyan-600/50 rounded-md shadow-xl max-h-96 overflow-y-auto">
+                        {filteredHuffadh.length > 0 ? (
+                          filteredHuffadh.map((hafidh) => (
+                            <button
+                              key={hafidh}
+                              onClick={() => {
+                                setSelectedHafidh(hafidh);
+                                setHafidhSearch("");
+                                setShowSuggestions(false);
+                              }}
+                              className="w-full px-4 py-3 text-left hover:bg-cyan-100 dark:hover:bg-cyan-900/30 text-cyan-900 dark:text-cyan-100 transition-colors border-b border-cyan-200 dark:border-cyan-800"
+                            >
+                              {hafidh}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-4 py-3 text-cyan-600 dark:text-cyan-400">
+                            No huffadh found
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Clear button */}
+                    {selectedHafidh && (
+                      <button
+                        onClick={() => {
+                          setSelectedHafidh("");
+                          setHafidhSearch("");
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-cyan-600 hover:text-cyan-800 dark:text-cyan-400 dark:hover:text-cyan-200"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Filter Pill Button - Inline, Icon Only */}
+                  <button
+                    onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                    className="flex-shrink-0 p-3 bg-cyan-600/30 hover:bg-cyan-600/50 border-2 border-cyan-600/50 rounded-full text-cyan-50 transition-all duration-200"
+                    aria-label="Advanced Filters"
+                  >
+                    <svg
+                      className="w-6 h-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Advanced Filters */}
+              {showAdvancedSearch && (
+                <div className="space-y-4">
+                  <OttomanFilter
+                    label="المسجد • Venue"
+                    options={["All", ...venues]}
+                    selected={selectedVenue}
+                    onChange={setSelectedVenue}
+                  />
+                  <OttomanFilter
+                    label="المدينة • City"
+                    options={["All", ...cities]}
+                    selected={selectedCity}
+                    onChange={setSelectedCity}
+                  />
+                  <OttomanFilter
+                    label="السنة • Year"
+                    options={["All", ...years.map(String)]}
+                    selected={selectedYear}
+                    onChange={setSelectedYear}
+                  />
+                  <OttomanFilter
+                    label="نوع الوسائط • Media Type"
+                    options={["All", "YouTube", "SoundCloud"]}
+                    selected={selectedMediaType}
+                    onChange={setSelectedMediaType}
+                  />
+                </div>
+              )}
+
+              {/* Apply Button */}
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="mt-6 w-full px-6 py-4 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-lg shadow-lg transition-colors"
+              >
+                Apply Filters ({filteredRecordings.length} Results)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="relative container mx-auto px-4 py-12">
