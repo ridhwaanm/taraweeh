@@ -1,12 +1,4 @@
 import { useState, useEffect } from "react";
-import {
-  Table,
-  TableHead,
-  TableBody,
-  TableRow,
-  TableHeader,
-  TableCell,
-} from "../ui/table";
 import { Button } from "../ui/button";
 import { Dialog, DialogTitle, DialogBody, DialogActions } from "../ui/dialog";
 import { Field, Label, ErrorMessage } from "../ui/fieldset";
@@ -19,6 +11,8 @@ import {
   PlusIcon,
   CloudArrowDownIcon,
 } from "@heroicons/react/24/outline";
+import { RecordingCard } from "./RecordingCard";
+import { ArabesquePattern } from "../patterns/OttomanBorder";
 
 interface Recording {
   id: number;
@@ -291,14 +285,42 @@ export function RecordingsTable() {
     }
   };
 
-  if (loading) return <div>Loading recordings...</div>;
-  if (error) return <div className="text-red-600">Error: {error}</div>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <div className="inline-block w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mb-4" />
+          <p className="text-amber-800 dark:text-amber-200 font-serif">
+            Loading recordings...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-lg p-6">
+        <p className="text-red-600 dark:text-red-400 font-semibold">
+          Error: {error}
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
-          Recordings
+    <div className="relative">
+      {/* Background arabesque pattern */}
+      <div className="absolute inset-0 pointer-events-none opacity-5 dark:opacity-10">
+        <ArabesquePattern className="w-full h-full text-amber-700" />
+      </div>
+
+      {/* Header with Ottoman-inspired styling */}
+      <div className="relative mb-8 flex items-center justify-between pb-4 border-b-2 border-amber-600/30">
+        <h2 className="text-3xl font-bold text-amber-900 dark:text-amber-100 font-serif flex items-center gap-3">
+          <span className="inline-block w-2 h-8 bg-gradient-to-b from-amber-600 to-amber-800 rounded-full" />
+          Taraweeh Recordings
+          <span className="inline-block w-2 h-8 bg-gradient-to-b from-amber-600 to-amber-800 rounded-full" />
         </h2>
         <div className="flex gap-2">
           {/* Fetch buttons only available in development (Puppeteer doesn't work on Netlify) */}
@@ -329,65 +351,86 @@ export function RecordingsTable() {
         </div>
       </div>
 
-      {/* Fetch Result Alert */}
+      {/* Fetch Result Alert - Ottoman styled */}
       {fetchResult && (
-        <div className="mb-4 rounded-lg bg-teal-50 p-4 dark:bg-teal-900/20">
-          <h3 className="text-sm font-medium text-teal-800 dark:text-teal-200">
+        <div className="relative mb-6 rounded-lg bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/20 dark:to-teal-800/10 p-6 border-2 border-teal-500/30 shadow-lg">
+          <div className="absolute top-2 right-2 w-6 h-6 text-teal-600 dark:text-teal-400 opacity-30">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+          </div>
+          <h3 className="text-lg font-bold text-teal-900 dark:text-teal-100 font-serif mb-3">
             {fetchResult.source || "Import"} Import Complete
           </h3>
-          <div className="mt-2 text-sm text-teal-700 dark:text-teal-300">
-            <p>Total found: {fetchResult.total}</p>
-            <p>✅ Imported (new): {fetchResult.imported}</p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div className="bg-white/50 dark:bg-black/20 rounded-md p-3">
+              <p className="text-teal-600 dark:text-teal-400 font-semibold">
+                Total Found
+              </p>
+              <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                {fetchResult.total}
+              </p>
+            </div>
+            <div className="bg-white/50 dark:bg-black/20 rounded-md p-3">
+              <p className="text-teal-600 dark:text-teal-400 font-semibold">
+                ✅ Imported
+              </p>
+              <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                {fetchResult.imported}
+              </p>
+            </div>
             {fetchResult.updated !== undefined && fetchResult.updated > 0 && (
-              <p>🔄 Updated (existing): {fetchResult.updated}</p>
-            )}
-            {fetchResult.skipped > 0 && (
-              <p>⏭️ Skipped: {fetchResult.skipped}</p>
+              <div className="bg-white/50 dark:bg-black/20 rounded-md p-3">
+                <p className="text-teal-600 dark:text-teal-400 font-semibold">
+                  🔄 Updated
+                </p>
+                <p className="text-2xl font-bold text-teal-900 dark:text-teal-100">
+                  {fetchResult.updated}
+                </p>
+              </div>
             )}
             {fetchResult.errors > 0 && (
-              <p className="text-red-600">❌ Errors: {fetchResult.errors}</p>
+              <div className="bg-white/50 dark:bg-black/20 rounded-md p-3">
+                <p className="text-red-600 dark:text-red-400 font-semibold">
+                  ❌ Errors
+                </p>
+                <p className="text-2xl font-bold text-red-900 dark:text-red-100">
+                  {fetchResult.errors}
+                </p>
+              </div>
             )}
           </div>
         </div>
       )}
 
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableHeader>ID</TableHeader>
-            <TableHeader>Hafidh</TableHeader>
-            <TableHeader>Venue</TableHeader>
-            <TableHeader>Year</TableHeader>
-            <TableHeader>Source</TableHeader>
-            <TableHeader>Section</TableHeader>
-            <TableHeader>Actions</TableHeader>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {recordings.map((recording) => (
-            <TableRow key={recording.id}>
-              <TableCell>{recording.id}</TableCell>
-              <TableCell>{recording.hafidh_name}</TableCell>
-              <TableCell>
-                {recording.venue_name}, {recording.city}
-              </TableCell>
-              <TableCell>{recording.hijri_year}</TableCell>
-              <TableCell>{recording.source}</TableCell>
-              <TableCell>{recording.section || "-"}</TableCell>
-              <TableCell>
-                <div className="flex gap-2">
-                  <Button plain onClick={() => openEdit(recording)}>
-                    <PencilIcon data-slot="icon" />
-                  </Button>
-                  <Button plain onClick={() => openDelete(recording)}>
-                    <TrashIcon data-slot="icon" className="text-red-600" />
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      {/* Card Grid - Responsive Ottoman Layout */}
+      <div className="relative grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {recordings.map((recording) => (
+          <RecordingCard
+            key={recording.id}
+            recording={recording}
+            onEdit={openEdit}
+            onDelete={openDelete}
+          />
+        ))}
+      </div>
+
+      {/* Empty state */}
+      {recordings.length === 0 && (
+        <div className="text-center py-16">
+          <div className="inline-block w-24 h-24 mb-4 text-amber-300 dark:text-amber-700 opacity-50">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
+            </svg>
+          </div>
+          <p className="text-xl text-amber-800 dark:text-amber-200 font-serif">
+            No recordings yet
+          </p>
+          <p className="text-sm text-amber-600 dark:text-amber-400 mt-2">
+            Add your first Taraweeh recording to get started
+          </p>
+        </div>
+      )}
 
       {/* Create/Edit Dialog */}
       <Dialog
