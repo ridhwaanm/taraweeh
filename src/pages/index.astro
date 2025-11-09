@@ -1,6 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import RecordingsPlayer from "../components/RecordingsPlayer";
+import OttomanRecordingsPlayer from "../components/OttomanRecordingsPlayer";
 import { getRecordings, getHuffadh, getVenues } from "../lib/db";
 import type { RecordingWithDetails, Hafidh, Venue } from "../lib/db";
 
@@ -16,8 +16,8 @@ const years = [...new Set(recordings.map((r) => r.hijri_year))].sort(
 );
 ---
 
-<Layout title="Taraweeh Recordings">
-    <RecordingsPlayer
+<Layout title="Taraweeh Recordings - مكتبة تسجيلات التراويح">
+    <OttomanRecordingsPlayer
         recordings={recordings}
         huffadh={huffadh}
         venues={venues}
