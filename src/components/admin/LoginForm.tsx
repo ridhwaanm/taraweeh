@@ -54,7 +54,7 @@ export function LoginForm() {
             autoComplete="email"
             aria-label="Email address"
             disabled={loading}
-            className="block w-full rounded-t-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
+            className="block w-full rounded-t-[var(--radius-md)] bg-background-base px-3 py-1.5 text-base text-primary outline-1 -outline-offset-1 outline-contrast-low placeholder:text-contrast-medium focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-state-focus sm:text-sm/6 dark:bg-[#0e0e12] dark:text-[#fbfcff] dark:outline-[#404044] dark:placeholder:text-[#88898c] dark:focus:outline-state-focus"
           />
         </div>
         <div className="-mt-px">
@@ -69,14 +69,16 @@ export function LoginForm() {
             autoComplete="current-password"
             aria-label="Password"
             disabled={loading}
-            className="block w-full rounded-b-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-teal-600 sm:text-sm/6 dark:bg-white/5 dark:text-white dark:outline-gray-700 dark:placeholder:text-gray-500 dark:focus:outline-teal-500"
+            className="block w-full rounded-b-[var(--radius-md)] bg-background-base px-3 py-1.5 text-base text-primary outline-1 -outline-offset-1 outline-contrast-low placeholder:text-contrast-medium focus:relative focus:outline-2 focus:-outline-offset-2 focus:outline-state-focus sm:text-sm/6 dark:bg-[#0e0e12] dark:text-[#fbfcff] dark:outline-[#404044] dark:placeholder:text-[#88898c] dark:focus:outline-state-focus"
           />
         </div>
       </div>
 
       {error && (
-        <div className="rounded-md bg-red-50 p-3 dark:bg-red-900/20">
-          <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+        <div className="rounded-[var(--radius-md)] bg-notification-error-soft p-3 dark:bg-[#3a0f0f]">
+          <p className="text-sm text-notification-error dark:text-[#fc4040]">
+            {error}
+          </p>
         </div>
       )}
 
@@ -90,7 +92,7 @@ export function LoginForm() {
                 name="remember-me"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="col-start-1 row-start-1 appearance-none rounded border border-gray-300 bg-white checked:border-teal-600 checked:bg-teal-600 indeterminate:border-teal-600 indeterminate:bg-teal-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:border-gray-300 disabled:bg-gray-100 disabled:checked:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:checked:border-teal-500 dark:checked:bg-teal-500 dark:indeterminate:border-teal-500 dark:indeterminate:bg-teal-500 dark:focus-visible:outline-teal-500 forced-colors:appearance-auto"
+                className="col-start-1 row-start-1 appearance-none rounded border border-contrast-low bg-background-base checked:border-state-focus checked:bg-state-focus indeterminate:border-state-focus indeterminate:bg-state-focus focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-state-focus disabled:border-contrast-low disabled:bg-background-surface disabled:checked:bg-background-surface dark:border-[#404044] dark:bg-[#0e0e12] dark:checked:border-state-focus dark:checked:bg-state-focus dark:indeterminate:border-state-focus dark:indeterminate:bg-state-focus dark:focus-visible:outline-state-focus forced-colors:appearance-auto"
               />
               <svg
                 viewBox="0 0 14 14"
@@ -109,7 +111,7 @@ export function LoginForm() {
           </div>
           <label
             htmlFor="remember-me"
-            className="block text-sm/6 text-gray-900 dark:text-gray-300"
+            className="block text-sm/6 text-primary dark:text-[#cecfd1]"
           >
             Remember me
           </label>
@@ -118,7 +120,7 @@ export function LoginForm() {
         <div className="text-sm/6">
           <a
             href="#"
-            className="font-semibold text-teal-600 hover:text-teal-500 dark:text-teal-400 dark:hover:text-teal-300"
+            className="font-semibold text-state-focus hover:opacity-80 dark:text-state-focus dark:hover:opacity-80"
           >
             Forgot password?
           </a>
@@ -129,7 +131,7 @@ export function LoginForm() {
         <button
           type="submit"
           disabled={loading}
-          className="flex w-full justify-center rounded-md bg-teal-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-sm hover:bg-teal-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-600 disabled:opacity-50 disabled:cursor-not-allowed dark:bg-teal-500 dark:shadow-none dark:hover:bg-teal-400 dark:focus-visible:outline-teal-500"
+          className="flex w-full justify-center rounded-[var(--radius-md)] bg-primary px-3 py-1.5 text-sm/6 font-semibold text-background-base shadow-sm hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-state-focus disabled:opacity-50 disabled:cursor-not-allowed dark:bg-[#fbfcff] dark:text-[#0e0e12] dark:shadow-none dark:hover:opacity-90 dark:focus-visible:outline-state-focus"
         >
           {loading ? "Signing in..." : "Sign in"}
         </button>

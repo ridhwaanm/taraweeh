@@ -11,50 +11,84 @@
 }
 
 @theme {
-    /* Brand colors from taraweeh logo */
-    --color-teal-50: #f0fdfa;
-    --color-teal-100: #ccfbf1;
-    --color-teal-200: #99f6e4;
-    --color-teal-300: #5eead4;
-    --color-teal-400: #2dd4bf;
-    --color-teal-500: #14b8a6;
-    --color-teal-600: #0d9488;
-    --color-teal-700: #0f766e;
-    --color-teal-800: #115e59;
-    --color-teal-900: #134e4a;
+    /* ========================================
+       Porsche Design System Tokens
+       ======================================== */
 
-    --color-navy-50: #f0f9ff;
-    --color-navy-100: #e0f2fe;
-    --color-navy-200: #bae6fd;
-    --color-navy-300: #7dd3fc;
-    --color-navy-400: #38bdf8;
-    --color-navy-500: #0ea5e9;
-    --color-navy-600: #0284c7;
-    --color-navy-700: #0369a1;
-    --color-navy-800: #075985;
-    --color-navy-900: #0c4a6e;
+    /* --- Colors: Light Theme (default) --- */
+    --color-primary: #010205;
+    --color-background-base: #ffffff;
+    --color-background-surface: #eeeff2;
+    --color-background-shading: #cbced7;
+    --color-contrast-low: #d8d8db;
+    --color-contrast-medium: #6b6d70;
+    --color-contrast-high: #353638;
+    --color-state-hover: #75767a;
+    --color-state-focus: #1a44ea;
+    --color-state-disabled: #949598;
+    --color-notification-error: #cc1922;
+    --color-notification-error-soft: #ffe2e4;
+    --color-notification-success: #197e10;
+    --color-notification-success-soft: #e4ffec;
+    --color-notification-warning: #f3be00;
+    --color-notification-warning-soft: #fff4d2;
+    --color-notification-info: #2762ec;
+    --color-notification-info-soft: #d3e1ff;
 
-    /* Font families */
+    /* --- Spacing: Static --- */
+    --spacing-static-xs: 4px;
+    --spacing-static-sm: 8px;
+    --spacing-static-md: 16px;
+    --spacing-static-lg: 32px;
+    --spacing-static-xl: 48px;
+    --spacing-static-2xl: 80px;
+
+    /* --- Spacing: Fluid --- */
+    --spacing-fluid-xs: clamp(4px, 0.25vw + 3px, 8px);
+    --spacing-fluid-sm: clamp(8px, 0.5vw + 6px, 16px);
+    --spacing-fluid-md: clamp(16px, 1.25vw + 12px, 36px);
+    --spacing-fluid-lg: clamp(32px, 2.75vw + 23px, 76px);
+    --spacing-fluid-xl: clamp(48px, 3vw + 38px, 96px);
+    --spacing-fluid-2xl: clamp(80px, 7.5vw + 56px, 200px);
+
+    /* --- Border Radius --- */
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+
+    /* --- Border Width --- */
+    --border-width-thin: 1px;
+    --border-width-base: 2px;
+
+    /* --- Typography: Font Sizes (Fluid) --- */
+    --font-size-xx-small: 0.75rem;
+    --font-size-x-small: clamp(0.81rem, 0.23vw + 0.77rem, 0.88rem);
+    --font-size-small: 1rem;
+    --font-size-medium: clamp(1.13rem, 0.21vw + 1.08rem, 1.33rem);
+    --font-size-large: clamp(1.27rem, 0.51vw + 1.16rem, 1.78rem);
+    --font-size-x-large: clamp(1.42rem, 0.94vw + 1.23rem, 2.37rem);
+    --font-size-heading-xx-large: clamp(1.6rem, 1.56vw + 1.29rem, 3.16rem);
+    --font-size-display-large: clamp(2.28rem, 5.2vw + 1.24rem, 7.48rem);
+
+    /* --- Motion --- */
+    --motion-duration-short: 0.25s;
+    --motion-duration-moderate: 0.4s;
+    --motion-duration-long: 0.6s;
+
+    /* --- Font Families --- */
     --font-family-sans:
-        "Playfair Display", system-ui, -apple-system, BlinkMacSystemFont,
-        "Segoe UI", Roboto, sans-serif;
-    --font-family-serif:
-        "Playfair Display", Georgia, Cambria, "Times New Roman", Times, serif;
+        "Inter", "Arial Narrow", Arial, "Heiti SC", SimHei, sans-serif;
     --font-family-arabic:
         "KFGQPC Uthmanic Script HAFS", "Traditional Arabic",
         "Arabic Typesetting", serif;
 }
 
-/* Catalyst UI overrides */
+/* Base body styles */
 body {
-    font-family:
-        "Playfair Display",
-        system-ui,
-        -apple-system,
-        BlinkMacSystemFont,
-        "Segoe UI",
-        Roboto,
-        sans-serif;
+    font-family: var(--font-family-sans);
+    line-height: calc(6px + 2.125ex);
+    color: var(--color-primary);
+    background-color: var(--color-background-base);
 }
 
 /* Arabic text styling */

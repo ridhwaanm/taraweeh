@@ -314,7 +314,7 @@ export function RecordingsTable() {
               </Button>
               <Button
                 onClick={handleFetchFromSoundCloud}
-                color="teal"
+                color="zinc"
                 disabled={isFetchingSoundCloud || isFetchingYouTube}
               >
                 <CloudArrowDownIcon data-slot="icon" />
@@ -331,11 +331,11 @@ export function RecordingsTable() {
 
       {/* Fetch Result Alert */}
       {fetchResult && (
-        <div className="mb-4 rounded-lg bg-teal-50 p-4 dark:bg-teal-900/20">
-          <h3 className="text-sm font-medium text-teal-800 dark:text-teal-200">
+        <div className="mb-4 rounded-[var(--radius-md)] bg-notification-success-soft p-4 dark:bg-[#003320]">
+          <h3 className="text-sm font-medium text-notification-success dark:text-[#09d087]">
             {fetchResult.source || "Import"} Import Complete
           </h3>
-          <div className="mt-2 text-sm text-teal-700 dark:text-teal-300">
+          <div className="mt-2 text-sm text-notification-success dark:text-[#09d087]">
             <p>Total found: {fetchResult.total}</p>
             <p>✅ Imported (new): {fetchResult.imported}</p>
             {fetchResult.updated !== undefined && fetchResult.updated > 0 && (

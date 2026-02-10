@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { RecordingWithDetails } from "../lib/db";
-import { Listbox } from "@headlessui/react";
+import { RecordingCard } from "./RecordingCard";
 
 interface RecordingsPlayerProps {
   recordings: RecordingWithDetails[];
@@ -17,16 +17,24 @@ export default function RecordingsPlayer({
   cities,
   years,
 }: RecordingsPlayerProps) {
-  const [selectedHafidh, setSelectedHafidh] = useState<string>("All");
+  const [selectedHafidh, setSelectedHafidh] = useState<string>("");
   const [selectedVenue, setSelectedVenue] = useState<string>("All");
   const [selectedCity, setSelectedCity] = useState<string>("All");
   const [selectedYear, setSelectedYear] = useState<string>("All");
+  const [selectedMediaType, setSelectedMediaType] = useState<string>("All");
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState<boolean>(false);
+  const [hafidhSearch, setHafidhSearch] = useState<string>("");
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const [showMobileSearch, setShowMobileSearch] = useState<boolean>(false);
   const [currentRecording, setCurrentRecording] =
     useState<RecordingWithDetails | null>(null);
 
-  // Filter recordings based on selected filters
+  const filteredHuffadh = huffadh.filter((hafidh) =>
+    hafidh.toLowerCase().includes(hafidhSearch.toLowerCase()),
+  );
+
   const filteredRecordings = recordings.filter((recording) => {
-    if (selectedHafidh !== "All" && recording.hafidh_name !== selectedHafidh)
+    if (selectedHafidh && recording.hafidh_name !== selectedHafidh)
       return false;
     if (selectedVenue !== "All" && recording.venue_name !== selectedVenue)
       return false;
@@ -36,16 +44,19 @@ export default function RecordingsPlayer({
       recording.hijri_year.toString() !== selectedYear
     )
       return false;
+    if (
+      selectedMediaType !== "All" &&
+      recording.source.toLowerCase() !== selectedMediaType.toLowerCase()
+    )
+      return false;
     return true;
   });
 
-  // Extract YouTube video ID from URL
   const getYouTubeId = (url: string): string | null => {
     const patterns = [
       /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\s]+)/,
       /youtube\.com\/shorts\/([^&\s]+)/,
     ];
-
     for (const pattern of patterns) {
       const match = url.match(pattern);
       if (match) return match[1];
@@ -62,136 +73,369 @@ export default function RecordingsPlayer({
   };
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-teal-50 to-blue-50 text-gray-900 pb-32">
-      {/* Top Navigation Bar */}
-      <div className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-8 py-6 shadow-sm">
-        <div className="flex items-center gap-4 mb-6">
-          <img src="/logo.png" alt="Taraweeh" className="h-12 w-auto" />
-          <div>
-            <h1 className="text-3xl font-bold text-teal-800">Taraweeh</h1>
-            <p className="text-sm text-gray-600">
-              Directory of Taraweeh Recordings
-            </p>
+    <div className="min-h-screen bg-background-base pb-32 dark:bg-[#0e0e12]">
+      {/* Header */}
+      <div className="relative md:sticky top-0 z-20 bg-background-surface border-b border-contrast-low dark:bg-[#292934] dark:border-[#404044]">
+        {/* Mobile Header */}
+        <div className="md:hidden px-[var(--spacing-static-md)] py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="Taraweeh" className="h-10 w-10" />
+              <span className="text-[length:var(--font-size-large)] font-bold text-primary dark:text-[#fbfcff]">
+                Taraweeh
+              </span>
+            </div>
+            <button
+              onClick={() => setShowMobileSearch(true)}
+              className="p-2 rounded-[var(--radius-sm)] border border-contrast-low hover:bg-background-shading transition-colors duration-[var(--motion-duration-short)] dark:border-[#404044] dark:hover:bg-[#404044]"
+              aria-label="Search"
+            >
+              <svg
+                className="w-5 h-5 text-primary dark:text-[#fbfcff]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <FilterSelect
-            label="Hafidh"
-            options={["All", ...huffadh]}
-            selected={selectedHafidh}
-            onChange={setSelectedHafidh}
-          />
-          <FilterSelect
-            label="Venue"
-            options={["All", ...venues]}
-            selected={selectedVenue}
-            onChange={setSelectedVenue}
-          />
-          <FilterSelect
-            label="City"
-            options={["All", ...cities]}
-            selected={selectedCity}
-            onChange={setSelectedCity}
-          />
-          <FilterSelect
-            label="Year"
-            options={["All", ...years.map(String)]}
-            selected={selectedYear}
-            onChange={setSelectedYear}
-          />
+        {/* Desktop Header */}
+        <div className="hidden md:block max-w-7xl mx-auto px-[var(--spacing-static-md)] py-[var(--spacing-static-lg)]">
+          <div className="flex items-center gap-[var(--spacing-static-md)] mb-[var(--spacing-static-lg)]">
+            <img src="/logo.png" alt="Taraweeh" className="h-16 w-16" />
+            <div>
+              <h1 className="text-[length:var(--font-size-heading-xx-large)] font-bold text-primary dark:text-[#fbfcff]">
+                Taraweeh
+              </h1>
+              <p className="text-[length:var(--font-size-small)] text-contrast-medium dark:text-[#88898c]">
+                مكتبة تسجيلات التراويح &bull; Taraweeh Recordings Directory
+              </p>
+            </div>
+          </div>
+
+          {/* Hafidh Search */}
+          <div className="relative max-w-xl">
+            <label className="block text-[length:var(--font-size-x-small)] font-semibold text-contrast-high mb-[var(--spacing-static-xs)] dark:text-[#cecfd1]">
+              Hafidh
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                value={hafidhSearch}
+                onChange={(e) => setHafidhSearch(e.target.value)}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                placeholder={selectedHafidh || "Search for a Hafidh..."}
+                className="w-full px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] bg-background-base border border-contrast-low rounded-[var(--radius-md)] text-primary text-[length:var(--font-size-small)] focus:outline-none focus:ring-2 focus:ring-state-focus focus:border-transparent transition-all duration-[var(--motion-duration-short)] dark:bg-[#0e0e12] dark:border-[#404044] dark:text-[#fbfcff]"
+              />
+
+              {showSuggestions && (
+                <div className="absolute z-10 w-full mt-1 bg-background-base border border-contrast-low rounded-[var(--radius-md)] shadow-lg max-h-60 overflow-y-auto dark:bg-[#0e0e12] dark:border-[#404044]">
+                  {filteredHuffadh.length > 0 ? (
+                    filteredHuffadh.map((hafidh) => (
+                      <button
+                        key={hafidh}
+                        onClick={() => {
+                          setSelectedHafidh(hafidh);
+                          setHafidhSearch("");
+                          setShowSuggestions(false);
+                        }}
+                        className="w-full px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] text-left hover:bg-background-surface text-primary transition-colors text-[length:var(--font-size-small)] dark:text-[#fbfcff] dark:hover:bg-[#292934]"
+                      >
+                        {hafidh}
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] text-contrast-medium text-[length:var(--font-size-small)] dark:text-[#88898c]">
+                      No huffadh found
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {selectedHafidh && (
+                <button
+                  onClick={() => {
+                    setSelectedHafidh("");
+                    setHafidhSearch("");
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-contrast-medium hover:text-primary dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Advanced Search Toggle */}
+          <div className="mt-[var(--spacing-static-md)]">
+            <button
+              onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+              className="flex items-center gap-2 px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] border border-contrast-low rounded-[var(--radius-sm)] text-[length:var(--font-size-small)] font-semibold text-contrast-high hover:bg-background-shading transition-all duration-[var(--motion-duration-short)] dark:border-[#404044] dark:text-[#cecfd1] dark:hover:bg-[#404044]"
+            >
+              <span>Advanced Search</span>
+              <svg
+                className={`w-4 h-4 transition-transform duration-[var(--motion-duration-short)] ${showAdvancedSearch ? "rotate-180" : ""}`}
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
+
+          {/* Advanced Filters */}
+          {showAdvancedSearch && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[var(--spacing-static-md)] mt-[var(--spacing-static-md)]">
+              <FilterSelect
+                label="Venue"
+                options={["All", ...venues]}
+                selected={selectedVenue}
+                onChange={setSelectedVenue}
+              />
+              <FilterSelect
+                label="City"
+                options={["All", ...cities]}
+                selected={selectedCity}
+                onChange={setSelectedCity}
+              />
+              <FilterSelect
+                label="Year"
+                options={["All", ...years.map(String)]}
+                selected={selectedYear}
+                onChange={setSelectedYear}
+              />
+              <FilterSelect
+                label="Media Type"
+                options={["All", "YouTube", "SoundCloud"]}
+                selected={selectedMediaType}
+                onChange={setSelectedMediaType}
+              />
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Mobile Search Overlay */}
+      {showMobileSearch && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/50">
+          <div className="bg-background-surface min-h-screen dark:bg-[#292934]">
+            <div className="px-[var(--spacing-static-md)] py-[var(--spacing-static-md)]">
+              <div className="flex items-center justify-between mb-[var(--spacing-static-md)]">
+                <h2 className="text-[length:var(--font-size-large)] font-bold text-primary dark:text-[#fbfcff]">
+                  Search Recordings
+                </h2>
+                <button
+                  onClick={() => setShowMobileSearch(false)}
+                  className="p-2 rounded-[var(--radius-sm)] border border-contrast-low hover:bg-background-shading transition-colors dark:border-[#404044] dark:hover:bg-[#404044]"
+                  aria-label="Close search"
+                >
+                  <svg
+                    className="w-5 h-5 text-primary dark:text-[#fbfcff]"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Hafidh Search */}
+              <div className="relative mb-[var(--spacing-static-md)]">
+                <label className="block text-[length:var(--font-size-x-small)] font-semibold text-contrast-high mb-[var(--spacing-static-xs)] dark:text-[#cecfd1]">
+                  Hafidh
+                </label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <input
+                      type="text"
+                      value={hafidhSearch}
+                      onChange={(e) => setHafidhSearch(e.target.value)}
+                      onFocus={() => setShowSuggestions(true)}
+                      placeholder={selectedHafidh || "Search for a Hafidh..."}
+                      className="w-full px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] bg-background-base border border-contrast-low rounded-[var(--radius-md)] text-primary text-[length:var(--font-size-small)] focus:outline-none focus:ring-2 focus:ring-state-focus focus:border-transparent transition-all duration-[var(--motion-duration-short)] dark:bg-[#0e0e12] dark:border-[#404044] dark:text-[#fbfcff]"
+                      autoFocus
+                    />
+
+                    {showSuggestions && (
+                      <div className="absolute z-10 w-full mt-1 bg-background-base border border-contrast-low rounded-[var(--radius-md)] shadow-lg max-h-96 overflow-y-auto dark:bg-[#0e0e12] dark:border-[#404044]">
+                        {filteredHuffadh.length > 0 ? (
+                          filteredHuffadh.map((hafidh) => (
+                            <button
+                              key={hafidh}
+                              onClick={() => {
+                                setSelectedHafidh(hafidh);
+                                setHafidhSearch("");
+                                setShowSuggestions(false);
+                              }}
+                              className="w-full px-[var(--spacing-static-md)] py-3 text-left hover:bg-background-surface text-primary transition-colors border-b border-contrast-low text-[length:var(--font-size-small)] dark:text-[#fbfcff] dark:hover:bg-[#292934] dark:border-[#404044]"
+                            >
+                              {hafidh}
+                            </button>
+                          ))
+                        ) : (
+                          <div className="px-[var(--spacing-static-md)] py-3 text-contrast-medium text-[length:var(--font-size-small)] dark:text-[#88898c]">
+                            No huffadh found
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {selectedHafidh && (
+                      <button
+                        onClick={() => {
+                          setSelectedHafidh("");
+                          setHafidhSearch("");
+                        }}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-contrast-medium hover:text-primary dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
+                    className="flex-shrink-0 p-[var(--spacing-static-sm)] border border-contrast-low rounded-[var(--radius-md)] text-primary hover:bg-background-shading transition-all duration-[var(--motion-duration-short)] dark:border-[#404044] dark:text-[#fbfcff] dark:hover:bg-[#404044]"
+                    aria-label="Advanced Filters"
+                  >
+                    <svg
+                      className="w-5 h-5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              {/* Advanced Filters */}
+              {showAdvancedSearch && (
+                <div className="space-y-[var(--spacing-static-md)]">
+                  <FilterSelect
+                    label="Venue"
+                    options={["All", ...venues]}
+                    selected={selectedVenue}
+                    onChange={setSelectedVenue}
+                  />
+                  <FilterSelect
+                    label="City"
+                    options={["All", ...cities]}
+                    selected={selectedCity}
+                    onChange={setSelectedCity}
+                  />
+                  <FilterSelect
+                    label="Year"
+                    options={["All", ...years.map(String)]}
+                    selected={selectedYear}
+                    onChange={setSelectedYear}
+                  />
+                  <FilterSelect
+                    label="Media Type"
+                    options={["All", "YouTube", "SoundCloud"]}
+                    selected={selectedMediaType}
+                    onChange={setSelectedMediaType}
+                  />
+                </div>
+              )}
+
+              <button
+                onClick={() => setShowMobileSearch(false)}
+                className="mt-[var(--spacing-static-lg)] w-full px-[var(--spacing-static-md)] py-3 bg-primary text-background-base font-bold rounded-[var(--radius-md)] hover:opacity-90 transition-opacity text-[length:var(--font-size-small)] dark:bg-[#fbfcff] dark:text-[#0e0e12]"
+              >
+                Apply Filters ({filteredRecordings.length} Results)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
-      <div className="px-8 py-6">
-        <h2 className="text-2xl font-bold mb-6">
-          {filteredRecordings.length} Recording
-          {filteredRecordings.length !== 1 ? "s" : ""}
-        </h2>
-
-        {/* Recordings Table */}
-        <div className="space-y-2">
-          {filteredRecordings.map((recording, index) => (
-            <div
-              key={recording.id}
-              className={`grid grid-cols-12 gap-4 px-4 py-3 rounded-lg transition-all cursor-pointer ${
-                currentRecording?.id === recording.id
-                  ? "bg-teal-100 shadow-md"
-                  : "bg-white hover:bg-teal-50 shadow-sm hover:shadow"
-              }`}
-              onClick={() => playRecording(recording)}
-            >
-              <div className="col-span-1 flex items-center justify-center text-gray-500">
-                {currentRecording?.id === recording.id ? (
-                  <svg
-                    className="w-5 h-5 text-teal-600"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z" />
-                  </svg>
-                ) : (
-                  <span className="text-sm">{index + 1}</span>
-                )}
-              </div>
-
-              <div className="col-span-5 flex flex-col justify-center">
-                <div
-                  className={`font-medium ${currentRecording?.id === recording.id ? "text-teal-700" : "text-gray-900"}`}
-                >
-                  {recording.hafidh_name}
-                </div>
-                {recording.title && (
-                  <div className="text-sm text-gray-600">{recording.title}</div>
-                )}
-              </div>
-
-              <div className="col-span-3 flex items-center text-sm text-gray-700">
-                {recording.venue_name}
-              </div>
-
-              <div className="col-span-2 flex items-center text-sm text-gray-700">
-                {recording.city}
-              </div>
-
-              <div className="col-span-1 flex items-center justify-end">
-                <span
-                  className={`px-2 py-1 text-xs font-medium rounded ${
-                    recording.source === "youtube"
-                      ? "bg-red-100 text-red-700"
-                      : "bg-orange-100 text-orange-700"
-                  }`}
-                >
-                  {recording.source}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
+      <div className="max-w-7xl mx-auto px-[var(--spacing-static-md)] py-[var(--spacing-fluid-lg)]">
+        {filteredRecordings.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[var(--spacing-fluid-md)]">
+            {filteredRecordings.map((recording) => (
+              <RecordingCard
+                key={recording.id}
+                recording={recording}
+                onPlay={playRecording}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-[var(--spacing-static-2xl)]">
+            <h3 className="text-[length:var(--font-size-x-large)] text-primary font-bold mb-3 dark:text-[#fbfcff]">
+              No recordings found
+            </h3>
+            <p className="text-[length:var(--font-size-medium)] text-contrast-medium dark:text-[#88898c]">
+              Try adjusting your filters to see more results
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* YouTube Player - Fixed Bottom */}
+      {/* YouTube Player */}
       {currentRecording && currentRecording.source === "youtube" && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
-          style={{ height: "320px" }}
-        >
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+        <div className="fixed bottom-0 left-0 right-0 bg-background-surface border-t border-contrast-low shadow-lg z-30 dark:bg-[#292934] dark:border-[#404044]">
+          <div className="h-[320px] flex flex-col">
+            <div className="flex items-center justify-between px-[var(--spacing-static-md)] py-3 border-b border-contrast-low dark:border-[#404044]">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate text-gray-900">
+                <div className="font-bold text-[length:var(--font-size-small)] truncate text-primary dark:text-[#fbfcff]">
                   {currentRecording.hafidh_name}
                 </div>
-                <div className="text-xs text-gray-600 truncate">
-                  {currentRecording.venue_name}, {currentRecording.city} •{" "}
-                  {currentRecording.hijri_year} AH
+                <div className="text-[length:var(--font-size-x-small)] text-contrast-medium truncate dark:text-[#88898c]">
+                  {currentRecording.venue_name}, {currentRecording.city} &bull;{" "}
+                  {currentRecording.hijri_year} هـ
                 </div>
               </div>
               <button
                 onClick={closePlayer}
-                className="ml-4 text-gray-600 hover:text-gray-900 p-2"
+                className="ml-4 p-2 rounded-[var(--radius-sm)] bg-notification-error text-white hover:opacity-90 transition-opacity"
                 aria-label="Close player"
               >
                 <svg
@@ -207,7 +451,7 @@ export default function RecordingsPlayer({
                 </svg>
               </button>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 bg-black">
               <iframe
                 width="100%"
                 height="100%"
@@ -219,34 +463,31 @@ export default function RecordingsPlayer({
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
-              ></iframe>
+              />
             </div>
           </div>
         </div>
       )}
 
-      {/* SoundCloud Player - Fixed Bottom */}
+      {/* SoundCloud Player */}
       {currentRecording && currentRecording.source === "soundcloud" && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg"
-          style={{ height: "200px" }}
-        >
-          <div className="h-full flex flex-col">
-            <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+        <div className="fixed bottom-0 left-0 right-0 bg-background-surface border-t border-contrast-low shadow-lg z-30 dark:bg-[#292934] dark:border-[#404044]">
+          <div className="h-[200px] flex flex-col">
+            <div className="flex items-center justify-between px-[var(--spacing-static-md)] py-3 border-b border-contrast-low dark:border-[#404044]">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-sm truncate text-gray-900">
+                <div className="font-bold text-[length:var(--font-size-small)] truncate text-primary dark:text-[#fbfcff]">
                   {currentRecording.hafidh_name}
                 </div>
-                <div className="text-xs text-gray-600 truncate">
-                  {currentRecording.venue_name}, {currentRecording.city} •{" "}
-                  {currentRecording.hijri_year} AH
+                <div className="text-[length:var(--font-size-x-small)] text-contrast-medium truncate dark:text-[#88898c]">
+                  {currentRecording.venue_name}, {currentRecording.city} &bull;{" "}
+                  {currentRecording.hijri_year} هـ
                   {currentRecording.section &&
-                    ` • Section ${currentRecording.section}`}
+                    ` \u2022 ${currentRecording.section}`}
                 </div>
               </div>
               <button
                 onClick={closePlayer}
-                className="ml-4 text-gray-600 hover:text-gray-900 p-2"
+                className="ml-4 p-2 rounded-[var(--radius-sm)] bg-notification-error text-white hover:opacity-90 transition-opacity"
                 aria-label="Close player"
               >
                 <svg
@@ -269,12 +510,8 @@ export default function RecordingsPlayer({
                 scrolling="no"
                 frameBorder="no"
                 allow="autoplay"
-                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(currentRecording.url)}&color=%2314b8a6&auto_play=true&hide_related=true&show_comments=false&show_user=true&show_reposts=false&show_teaser=false&visual=false`}
-                title={
-                  currentRecording.title ||
-                  `${currentRecording.hafidh_name} - ${currentRecording.hijri_year} AH`
-                }
-              ></iframe>
+                src={`https://w.soundcloud.com/player/?url=${encodeURIComponent(currentRecording.url)}&color=%23010205&auto_play=true&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=false`}
+              />
             </div>
           </div>
         </div>
@@ -283,57 +520,48 @@ export default function RecordingsPlayer({
   );
 }
 
-interface FilterSelectProps {
-  label: string;
-  options: string[];
-  selected: string;
-  onChange: (value: string) => void;
-}
-
 function FilterSelect({
   label,
   options,
   selected,
   onChange,
-}: FilterSelectProps) {
+}: {
+  label: string;
+  options: string[];
+  selected: string;
+  onChange: (value: string) => void;
+}) {
   return (
-    <Listbox value={selected} onChange={onChange}>
+    <div>
+      <label className="block text-[length:var(--font-size-x-small)] font-semibold text-contrast-high mb-[var(--spacing-static-xs)] dark:text-[#cecfd1]">
+        {label}
+      </label>
       <div className="relative">
-        <Listbox.Label className="block text-xs text-gray-600 mb-1 font-medium">
-          {label}
-        </Listbox.Label>
-        <Listbox.Button className="w-full bg-white hover:bg-gray-50 border border-gray-300 rounded-lg px-4 py-2 text-left text-sm transition-all flex items-center justify-between shadow-sm">
-          <span className="truncate text-gray-900">{selected}</span>
+        <select
+          value={selected}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full px-[var(--spacing-static-md)] py-[var(--spacing-static-sm)] bg-background-base border border-contrast-low rounded-[var(--radius-md)] text-primary text-[length:var(--font-size-small)] focus:outline-none focus:ring-2 focus:ring-state-focus focus:border-transparent cursor-pointer transition-all duration-[var(--motion-duration-short)] hover:bg-background-surface appearance-none dark:bg-[#0e0e12] dark:border-[#404044] dark:text-[#fbfcff] dark:hover:bg-[#292934]"
+        >
+          {options.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
           <svg
-            className="w-4 h-4 text-gray-500"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+            className="w-4 h-4 text-contrast-medium dark:text-[#88898c]"
+            fill="currentColor"
+            viewBox="0 0 20 20"
           >
             <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
+              fillRule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+              clipRule="evenodd"
             />
           </svg>
-        </Listbox.Button>
-        <Listbox.Options className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-xl max-h-60 overflow-auto border border-gray-200">
-          {options.map((option) => (
-            <Listbox.Option
-              key={option}
-              value={option}
-              className={({ active }) =>
-                `cursor-pointer select-none px-4 py-2 text-sm ${
-                  active ? "bg-teal-50" : ""
-                } ${selected === option ? "text-teal-700 font-medium bg-teal-50" : "text-gray-900"}`
-              }
-            >
-              {option}
-            </Listbox.Option>
-          ))}
-        </Listbox.Options>
+        </div>
       </div>
-    </Listbox>
+    </div>
   );
 }
