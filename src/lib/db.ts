@@ -269,5 +269,134 @@ export async function getOrCreateVenue(
   return Number(insertResult.lastInsertRowid);
 }
 
+// Venue Submissions
+export interface VenueSubmission {
+  id: number;
+  venue_name: string;
+  sub_venue_name: string | null;
+  address_full: string;
+  city: string;
+  province: string | null;
+  country: string;
+  latitude: number;
+  longitude: number;
+  google_place_id: string | null;
+  juz_per_night: number | null;
+  reader_names: string | null;
+  whatsapp_number: string;
+  status: "pending" | "approved" | "rejected";
+  admin_notes: string | null;
+  approved_venue_id: number | null;
+  submitted_at: string;
+  reviewed_at: string | null;
+}
+
+export const insertVenueSubmission = {
+  run: async (data: {
+    venue_name: string;
+    sub_venue_name?: string;
+    address_full: string;
+    city: string;
+    province?: string;
+    country?: string;
+    latitude: number;
+    longitude: number;
+    google_place_id?: string;
+    juz_per_night?: number;
+    reader_names?: string;
+    whatsapp_number: string;
+  }) => {
+    return await db.execute({
+      sql: `INSERT INTO venue_submissions
+        (venue_name, sub_venue_name, address_full, city, province, country, latitude, longitude, google_place_id, juz_per_night, reader_names, whatsapp_number)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        data.venue_name,
+        data.sub_venue_name || null,
+        data.address_full,
+        data.city,
+        data.province || null,
+        data.country || "ZA",
+        data.latitude,
+        data.longitude,
+        data.google_place_id || null,
+        data.juz_per_night || null,
+        data.reader_names || null,
+        data.whatsapp_number,
+      ],
+    });
+  },
+};
+
+export const getVenueSubmissions = {
+  all: async (status?: string) => {
+    if (status) {
+      const result = await db.execute({
+        sql: "SELECT * FROM venue_submissions WHERE status = ? ORDER BY submitted_at DESC",
+        args: [status],
+      });
+      return resultToArray<VenueSubmission>(result);
+    }
+    const result = await db.execute(
+      "SELECT * FROM venue_submissions ORDER BY submitted_at DESC",
+    );
+    return resultToArray<VenueSubmission>(result);
+  },
+};
+
+export async function approveVenueSubmission(
+  id: number,
+  finalName: string,
+  city: string,
+): Promise<number> {
+  const venueId = await getOrCreateVenue(finalName, city);
+  await db.execute({
+    sql: `UPDATE venue_submissions
+      SET status = 'approved', approved_venue_id = ?, reviewed_at = CURRENT_TIMESTAMP
+      WHERE id = ?`,
+    args: [venueId, id],
+  });
+  return venueId;
+}
+
+export async function rejectVenueSubmission(
+  id: number,
+  notes?: string,
+): Promise<void> {
+  await db.execute({
+    sql: `UPDATE venue_submissions
+      SET status = 'rejected', admin_notes = ?, reviewed_at = CURRENT_TIMESTAMP
+      WHERE id = ?`,
+    args: [notes || null, id],
+  });
+}
+
+// Public venue data (no sensitive fields)
+export interface PublicVenue {
+  id: number;
+  venue_name: string;
+  sub_venue_name: string | null;
+  address_full: string;
+  city: string;
+  province: string | null;
+  latitude: number;
+  longitude: number;
+  juz_per_night: number | null;
+  reader_names: string | null;
+}
+
+export const getApprovedVenueSubmissions = {
+  all: async (): Promise<PublicVenue[]> => {
+    const result = await db.execute(
+      `SELECT id, venue_name, sub_venue_name, address_full, city, province,
+              latitude, longitude, juz_per_night, reader_names
+       FROM venue_submissions
+       WHERE status = 'approved'
+       ORDER BY province, city, venue_name`,
+    );
+    return resultToArray<PublicVenue>(result);
+  },
+};
+
 export { db };
 export default db;

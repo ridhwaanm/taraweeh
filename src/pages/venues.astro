@@ -1,0 +1,78 @@
+---
+import "../styles/global.css";
+import { getApprovedVenueSubmissions } from "../lib/db";
+
+export const prerender = false;
+
+const venues = await getApprovedVenueSubmissions.all();
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content="Find Taraweeh venues near you across South Africa" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+        <!-- Favicons -->
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" href="/favicon-192x192.png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        <!-- Open Graph / SEO -->
+        <meta property="og:title" content="Venue Map — Taraweeh" />
+        <meta property="og:type" content="website" />
+
+        <!-- Google Fonts - Inter -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>Venue Map — Taraweeh</title>
+
+        <style>
+            html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+        </style>
+    </head>
+    <body class="bg-background-base text-primary">
+        {/* Header */}
+        <div class="h-12 flex items-center border-b border-contrast-low bg-white/95 backdrop-blur-sm relative z-[1001]" style="backdrop-filter: blur(8px);">
+            <div class="w-full px-4 flex items-center justify-between">
+                <a href="/" class="flex items-center gap-2">
+                    <img src="/logo.png" alt="Taraweeh" class="h-7 w-7" />
+                </a>
+                <span class="text-[length:var(--font-size-small)] font-semibold text-primary">
+                    Venue Map
+                </span>
+                <a
+                    href="/submit"
+                    class="text-[length:var(--font-size-xx-small)] font-semibold px-3 py-1.5 rounded-full"
+                    style="background:#178a7a;color:white;"
+                >
+                    Submit Venue
+                </a>
+            </div>
+        </div>
+
+        {/* Map fills remaining viewport */}
+        <div style="height: calc(100vh - 48px); width: 100%;">
+            <div id="map-root" style="width: 100%; height: 100%;"></div>
+        </div>
+
+        {/* Venue data injected as JSON for client-side hydration */}
+        <script type="application/json" id="venues-data" set:html={JSON.stringify(venues)} />
+
+        {/* Mount React map component */}
+        <script>
+            import { createElement } from "react";
+            import { createRoot } from "react-dom/client";
+            import VenuesMap from "../components/VenuesMap";
+
+            const root = createRoot(document.getElementById("map-root")!);
+            root.render(createElement(VenuesMap));
+        </script>
+    </body>
+</html>

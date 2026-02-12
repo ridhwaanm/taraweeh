@@ -33,16 +33,22 @@
     "drizzle-orm": "^0.44.7",
     "kysely": "^0.28.8",
     "kysely-libsql": "^0.7.1",
+    "leaflet": "^1.9.4",
     "libsql": "^0.5.22",
     "motion": "^12.23.24",
-    "puppeteer": "^24.25.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "tailwindcss": "^4.1.14"
+    "react-leaflet": "^5.0.0",
+    "tailwindcss": "^4.1.14",
+    "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@types/google.maps": "^3.58.1",
+    "@types/leaflet": "^1.9.21",
+    "baseline-browser-mapping": "^2.9.19",
     "better-sqlite3": "^12.4.1",
     "dotenv-cli": "^11.0.0",
+    "puppeteer": "^24.25.0",
     "tsx": "^4.20.6"
   }
 }

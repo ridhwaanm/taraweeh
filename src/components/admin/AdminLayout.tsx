@@ -6,6 +6,7 @@ import {
   RectangleStackIcon,
   UserGroupIcon,
   MapPinIcon,
+  InboxIcon,
 } from "@heroicons/react/24/outline";
 import { SidebarLayout } from "../ui/sidebar-layout";
 import {
@@ -22,7 +23,7 @@ import { Avatar } from "../ui/avatar";
 
 interface AdminLayoutProps {
   children: React.ReactNode;
-  currentPage?: "recordings" | "huffadh" | "venues";
+  currentPage?: "recordings" | "huffadh" | "venues" | "venue-submissions";
 }
 
 export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
@@ -110,6 +111,13 @@ export function AdminLayout({ children, currentPage }: AdminLayoutProps) {
               >
                 <MapPinIcon />
                 <SidebarLabel>Venues</SidebarLabel>
+              </SidebarItem>
+              <SidebarItem
+                href="/admin/venue-submissions"
+                current={currentPage === "venue-submissions"}
+              >
+                <InboxIcon />
+                <SidebarLabel>Submissions</SidebarLabel>
               </SidebarItem>
             </SidebarSection>
           </SidebarBody>

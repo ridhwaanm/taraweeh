@@ -1,3 +1,4 @@
+import { motion } from "motion/react";
 import type { RecordingWithDetails } from "../lib/db";
 
 interface RecordingCardProps {
@@ -19,8 +20,8 @@ function getYouTubeId(url: string): string | null {
 
 function GeometricPattern({ id }: { id: number }) {
   const hue = (id * 137) % 360;
-  const bg = `hsl(${hue}, 20%, 12%)`;
-  const fg = `hsl(${hue}, 30%, 30%)`;
+  const bg = `hsl(${hue}, 25%, 88%)`;
+  const fg = `hsl(${hue}, 35%, 55%)`;
 
   return (
     <svg
@@ -65,12 +66,18 @@ export function RecordingCard({ recording, onPlay }: RecordingCardProps) {
   const youtubeId =
     recording.source === "youtube" ? getYouTubeId(recording.url) : null;
 
+  const isYouTube = recording.source === "youtube";
+
   return (
-    <button
+    <motion.button
       onClick={() => onPlay(recording)}
-      className="group relative w-full text-left"
+      className="group relative w-full text-left active:scale-[0.97] transition-transform duration-100"
+      variants={{
+        hidden: { opacity: 0, y: 12 },
+        visible: { opacity: 1, y: 0 },
+      }}
     >
-      <div className="relative aspect-[4/5] rounded-[var(--radius-lg)] overflow-hidden bg-background-surface">
+      <div className="glass-card relative aspect-[4/5] overflow-hidden">
         {/* Image / Pattern */}
         {youtubeId ? (
           <img
@@ -83,22 +90,22 @@ export function RecordingCard({ recording, onPlay }: RecordingCardProps) {
           <GeometricPattern id={recording.id} />
         )}
 
-        {/* Source badge — top right */}
+        {/* Source badge — top right with glow */}
         <div className="absolute top-3 right-3 z-10">
           <span
-            className={`inline-block px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider opacity-70 group-hover:opacity-100 transition-opacity duration-[var(--motion-duration-short)] ${
-              recording.source === "youtube"
-                ? "bg-[#cc1922] text-white"
-                : "bg-[#f7cb47] text-[#1a1a22]"
+            className={`inline-block px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider ${
+              isYouTube
+                ? "bg-[#cc1922] text-white shadow-[0_0_12px_rgba(204,25,34,0.5)]"
+                : "bg-[#f7cb47] text-[#1a1a22] shadow-[0_0_12px_rgba(247,203,71,0.4)]"
             }`}
           >
             {recording.source}
           </span>
         </div>
 
-        {/* Play button — center, appears on hover */}
+        {/* Play button — center, appears on hover/focus */}
         <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-[var(--motion-duration-short)] shadow-lg">
+          <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 scale-75 group-hover:scale-100 group-focus-visible:scale-100 transition-all duration-[var(--motion-duration-short)] shadow-lg">
             <svg
               className="w-7 h-7 text-[#0e0e12] ml-0.5"
               fill="currentColor"
@@ -132,6 +139,6 @@ export function RecordingCard({ recording, onPlay }: RecordingCardProps) {
         {/* Hover darkening overlay */}
         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-[var(--motion-duration-short)]" />
       </div>
-    </button>
+    </motion.button>
   );
 }

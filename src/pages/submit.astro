@@ -1,0 +1,59 @@
+---
+import "../styles/global.css";
+import Footer from "../components/Footer.astro";
+import VenueSubmissionForm from "../components/VenueSubmissionForm";
+
+export const prerender = false;
+---
+
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="description" content="Submit a Taraweeh venue" />
+        <meta name="viewport" content="width=device-width" />
+
+        <!-- Favicons -->
+        <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
+        <link rel="icon" href="/favicon-192x192.png" sizes="192x192" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+        <!-- Open Graph / SEO -->
+        <meta property="og:title" content="Submit a Venue — Taraweeh" />
+        <meta property="og:type" content="website" />
+
+        <!-- Google Fonts - Inter -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap"
+            rel="stylesheet"
+        />
+
+        <title>Submit a Venue — Taraweeh</title>
+    </head>
+    <body class="bg-background-base text-primary min-h-screen flex flex-col">
+        {/* Header */}
+        <div class="py-4 border-b border-contrast-low">
+            <div
+                class="max-w-7xl mx-auto px-4 flex items-center justify-between"
+            >
+                <a href="/" class="flex items-center gap-2">
+                    <img src="/logo.png" alt="Taraweeh" class="h-8 w-8" />
+                </a>
+                <span
+                    class="text-[length:var(--font-size-small)] font-semibold text-primary"
+                >
+                    Submit a Venue
+                </span>
+            </div>
+        </div>
+
+        {/* Form */}
+        <main class="flex-1 py-8">
+            <VenueSubmissionForm client:load />
+        </main>
+
+        <Footer />
+    </body>
+</html>

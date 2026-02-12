@@ -18,6 +18,7 @@ import {
   TrashIcon,
   PlusIcon,
   CloudArrowDownIcon,
+  ClipboardDocumentIcon,
 } from "@heroicons/react/24/outline";
 
 interface Recording {
@@ -81,6 +82,19 @@ export function RecordingsTable() {
     errors: number;
     source?: string;
   } | null>(null);
+
+  // SoundCloud paste-import dialog state
+  const [isSCDialogOpen, setIsSCDialogOpen] = useState(false);
+  const [scPasteValue, setSCPasteValue] = useState("");
+  const [scStatus, setSCStatus] = useState<
+    "instructions" | "preview" | "importing" | "error"
+  >("instructions");
+  const [scTracks, setSCTracks] = useState<{ title: string; url: string }[]>(
+    [],
+  );
+  const [scNewCount, setSCNewCount] = useState(0);
+  const [scExistingCount, setSCExistingCount] = useState(0);
+  const [scError, setSCError] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -243,25 +257,103 @@ export function RecordingsTable() {
     setIsDeleteOpen(true);
   };
 
-  const handleFetchFromSoundCloud = async () => {
-    setIsFetchingSoundCloud(true);
+  // The console script the admin runs on SoundCloud to extract tracks
+  const SC_EXTRACT_SCRIPT = `JSON.stringify([...document.querySelectorAll('li.soundList__item a.soundTitle__title, article a.soundTitle__title')].map(a=>({title:a.textContent.trim(),url:a.href.startsWith('http')?a.href:'https://soundcloud.com'+a.getAttribute('href')})).filter((v,i,s)=>s.findIndex(t=>t.url===v.url)===i))`;
+
+  const handleFetchFromSoundCloud = () => {
+    setSCStatus("instructions");
+    setSCPasteValue("");
+    setSCTracks([]);
+    setSCNewCount(0);
+    setSCExistingCount(0);
+    setSCError("");
     setFetchResult(null);
     setError("");
+    setIsSCDialogOpen(true);
+  };
+
+  const handleSCCopyScript = async () => {
     try {
-      const response = await fetch("/api/admin/soundcloud-fetch", {
+      await navigator.clipboard.writeText(SC_EXTRACT_SCRIPT);
+    } catch {
+      // Fallback: select the text
+    }
+  };
+
+  // Parse pasted JSON and check for duplicates against existing recordings
+  const handleSCParse = () => {
+    setSCError("");
+    try {
+      const parsed = JSON.parse(scPasteValue);
+      if (!Array.isArray(parsed) || parsed.length === 0) {
+        setSCError("No tracks found in pasted data");
+        return;
+      }
+
+      // Validate shape
+      const tracks: { title: string; url: string }[] = parsed
+        .filter(
+          (t: any) =>
+            typeof t.title === "string" &&
+            typeof t.url === "string" &&
+            t.title &&
+            t.url,
+        )
+        .map((t: any) => ({ title: t.title, url: t.url }));
+
+      if (tracks.length === 0) {
+        setSCError("No valid tracks found in pasted data");
+        return;
+      }
+
+      // Filter to Taraweeh tracks
+      const taraweehTracks = tracks.filter((t) =>
+        t.title.includes("Taraweeh 14"),
+      );
+
+      // Check which are already in the DB by comparing URLs
+      const existingUrls = new Set(recordings.map((r) => r.url));
+      let newCount = 0;
+      let existingCount = 0;
+      for (const t of taraweehTracks) {
+        if (existingUrls.has(t.url)) {
+          existingCount++;
+        } else {
+          newCount++;
+        }
+      }
+
+      setSCTracks(taraweehTracks);
+      setSCNewCount(newCount);
+      setSCExistingCount(existingCount);
+      setSCStatus("preview");
+    } catch {
+      setSCError("Invalid JSON. Make sure you copied the full output.");
+    }
+  };
+
+  const handleSCImport = async () => {
+    setSCStatus("importing");
+    setIsFetchingSoundCloud(true);
+    try {
+      const response = await fetch("/api/admin/soundcloud-import", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tracks: scTracks }),
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to fetch SoundCloud tracks");
+        const err = await response.json();
+        throw new Error(err.error || "Failed to import SoundCloud tracks");
       }
 
       const result = await response.json();
       setFetchResult({ ...result, source: "SoundCloud" });
-      fetchData(); // Refresh the recordings list
+      setIsSCDialogOpen(false);
+      fetchData();
     } catch (err: any) {
-      setError(err.message);
+      setSCError(err.message);
+      setSCStatus("error");
     } finally {
       setIsFetchingSoundCloud(false);
     }
@@ -301,27 +393,23 @@ export function RecordingsTable() {
           Recordings
         </h2>
         <div className="flex gap-2">
-          {/* Fetch buttons only available in development (Puppeteer doesn't work on Netlify) */}
-          {import.meta.env.DEV && (
-            <>
-              <Button
-                onClick={handleFetchFromYouTube}
-                color="red"
-                disabled={isFetchingYouTube || isFetchingSoundCloud}
-              >
-                <CloudArrowDownIcon data-slot="icon" />
-                {isFetchingYouTube ? "Fetching..." : "Fetch from YouTube"}
-              </Button>
-              <Button
-                onClick={handleFetchFromSoundCloud}
-                color="zinc"
-                disabled={isFetchingSoundCloud || isFetchingYouTube}
-              >
-                <CloudArrowDownIcon data-slot="icon" />
-                {isFetchingSoundCloud ? "Fetching..." : "Fetch from SoundCloud"}
-              </Button>
-            </>
-          )}
+          <Button
+            onClick={handleFetchFromYouTube}
+            color="red"
+            disabled={isFetchingYouTube || isFetchingSoundCloud}
+          >
+            <CloudArrowDownIcon data-slot="icon" />
+            {isFetchingYouTube ? "Fetching..." : "Fetch from YouTube"}
+          </Button>
+          {/* SoundCloud fetch uses client-side widget — works in production */}
+          <Button
+            onClick={handleFetchFromSoundCloud}
+            color="zinc"
+            disabled={isFetchingSoundCloud || isFetchingYouTube}
+          >
+            <CloudArrowDownIcon data-slot="icon" />
+            {isFetchingSoundCloud ? "Fetching..." : "Fetch from SoundCloud"}
+          </Button>
           <Button onClick={openCreate} color="indigo">
             <PlusIcon data-slot="icon" />
             Add Recording
@@ -555,6 +643,173 @@ export function RecordingsTable() {
           <Button onClick={handleDelete} color="red">
             Delete
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* SoundCloud Paste-Import Dialog */}
+      <Dialog
+        open={isSCDialogOpen}
+        onClose={() => {
+          if (scStatus !== "importing") setIsSCDialogOpen(false);
+        }}
+        size="2xl"
+      >
+        <DialogTitle>Fetch from SoundCloud</DialogTitle>
+        <DialogBody>
+          {scStatus === "instructions" && (
+            <div className="space-y-4">
+              <div className="rounded-[var(--radius-md)] bg-zinc-50 p-4 dark:bg-zinc-800/50">
+                <p className="mb-3 text-sm font-medium text-zinc-900 dark:text-white">
+                  Steps:
+                </p>
+                <ol className="list-inside list-decimal space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
+                  <li>
+                    Open{" "}
+                    <a
+                      href="https://soundcloud.com/aswaatulqurraa/tracks"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-indigo-600 underline dark:text-indigo-400"
+                    >
+                      soundcloud.com/aswaatulqurraa/tracks
+                    </a>{" "}
+                    in a new tab
+                  </li>
+                  <li>Scroll to the bottom to load all tracks</li>
+                  <li>Open the browser console (F12) and paste this script:</li>
+                </ol>
+                <div className="mt-3 flex items-start gap-2">
+                  <code className="block flex-1 overflow-x-auto rounded bg-zinc-900 p-2 text-xs text-zinc-100 dark:bg-black">
+                    copy({SC_EXTRACT_SCRIPT})
+                  </code>
+                  <Button
+                    plain
+                    onClick={handleSCCopyScript}
+                    title="Copy script"
+                  >
+                    <ClipboardDocumentIcon data-slot="icon" />
+                  </Button>
+                </div>
+                <ol
+                  start={4}
+                  className="mt-2 list-inside list-decimal space-y-2 text-sm text-zinc-600 dark:text-zinc-400"
+                >
+                  <li>The track data is now on your clipboard</li>
+                  <li>Paste it in the box below</li>
+                </ol>
+              </div>
+
+              <Field>
+                <Label>Paste track data (JSON)</Label>
+                <Textarea
+                  value={scPasteValue}
+                  onChange={(e) => setSCPasteValue(e.target.value)}
+                  placeholder='[{"title":"...","url":"..."},...]'
+                  rows={4}
+                />
+              </Field>
+
+              {scError && (
+                <div className="rounded-[var(--radius-md)] bg-red-50 p-3 dark:bg-red-950/30">
+                  <p className="text-sm text-red-700 dark:text-red-400">
+                    {scError}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {scStatus === "preview" && (
+            <div className="space-y-3">
+              <div className="flex gap-4 text-sm">
+                <span className="text-zinc-900 dark:text-white">
+                  Total Taraweeh tracks: <strong>{scTracks.length}</strong>
+                </span>
+                <span className="text-green-700 dark:text-green-400">
+                  New: <strong>{scNewCount}</strong>
+                </span>
+                <span className="text-zinc-500 dark:text-zinc-400">
+                  Already imported: <strong>{scExistingCount}</strong>
+                </span>
+              </div>
+              {scNewCount === 0 ? (
+                <div className="rounded-[var(--radius-md)] bg-yellow-50 p-3 dark:bg-yellow-950/30">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                    All {scTracks.length} tracks are already in the database.
+                    Nothing new to import.
+                  </p>
+                </div>
+              ) : (
+                <div className="max-h-48 overflow-y-auto rounded-[var(--radius-md)] border border-zinc-200 dark:border-zinc-700">
+                  <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+                    {scTracks.map((t, i) => {
+                      const isExisting = recordings.some(
+                        (r) => r.url === t.url,
+                      );
+                      return (
+                        <li
+                          key={i}
+                          className={`px-3 py-2 text-xs ${isExisting ? "text-zinc-400 line-through dark:text-zinc-600" : "text-zinc-600 dark:text-zinc-400"}`}
+                        >
+                          {t.title}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
+            </div>
+          )}
+
+          {scStatus === "importing" && (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              Importing {scNewCount} new tracks to database...
+            </p>
+          )}
+
+          {scStatus === "error" && scTracks.length > 0 && (
+            <div className="rounded-[var(--radius-md)] bg-red-50 p-3 dark:bg-red-950/30">
+              <p className="text-sm text-red-700 dark:text-red-400">
+                {scError}
+              </p>
+            </div>
+          )}
+        </DialogBody>
+        <DialogActions>
+          <Button
+            plain
+            onClick={() => setIsSCDialogOpen(false)}
+            disabled={scStatus === "importing"}
+          >
+            Cancel
+          </Button>
+          {scStatus === "instructions" && (
+            <Button
+              onClick={handleSCParse}
+              color="indigo"
+              disabled={!scPasteValue.trim()}
+            >
+              Preview
+            </Button>
+          )}
+          {scStatus === "preview" && (
+            <>
+              <Button
+                plain
+                onClick={() => {
+                  setSCStatus("instructions");
+                  setSCTracks([]);
+                }}
+              >
+                Back
+              </Button>
+              {scNewCount > 0 && (
+                <Button onClick={handleSCImport} color="indigo">
+                  Import {scNewCount} new tracks
+                </Button>
+              )}
+            </>
+          )}
         </DialogActions>
       </Dialog>
     </div>

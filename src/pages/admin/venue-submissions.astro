@@ -1,0 +1,32 @@
+---
+import "../../styles/global.css";
+import { AdminLayout } from "../../components/admin/AdminLayout";
+import { VenueSubmissionsTable } from "../../components/admin/VenueSubmissionsTable";
+import { getAuth } from "../../lib/auth";
+
+export const prerender = false;
+
+const auth = getAuth();
+
+const session = await auth.api.getSession({
+    headers: Astro.request.headers,
+});
+
+if (!session) {
+    return Astro.redirect("/admin/login");
+}
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Venue Submissions - Admin</title>
+    </head>
+    <body class="h-full">
+        <AdminLayout client:load currentPage="venue-submissions">
+            <VenueSubmissionsTable client:load />
+        </AdminLayout>
+    </body>
+</html>

@@ -2,26 +2,21 @@
 // Footer component with social media links
 ---
 
-<footer
-    class="bg-background-base border-t border-contrast-low mt-[var(--spacing-static-xl)] dark:bg-[#0e0e12] dark:border-[#404044]"
->
-    <div
-        class="max-w-7xl mx-auto px-[var(--spacing-static-md)] py-[var(--spacing-static-lg)]"
-    >
-        <div
-            class="flex flex-col items-center space-y-[var(--spacing-static-md)]"
-        >
+<footer class="mt-12 pb-8">
+    <div class="gradient-divider mb-6"></div>
+    <div class="max-w-7xl mx-auto px-4">
+        <div class="flex flex-col items-center gap-3">
             <!-- Social Links -->
-            <div class="flex items-center space-x-[var(--spacing-static-md)]">
+            <div class="flex items-center gap-4">
                 <a
                     href="https://www.facebook.com/aswaatulqurraa"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-contrast-medium hover:text-primary transition-colors duration-[var(--motion-duration-short)] dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                    class="text-contrast-medium hover:text-primary transition-colors duration-200"
                     aria-label="Facebook"
                 >
                     <svg
-                        class="w-7 h-7"
+                        class="w-5 h-5"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                     >
@@ -30,16 +25,15 @@
                         ></path>
                     </svg>
                 </a>
-
                 <a
                     href="https://x.com/aswaatulqurraa"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-contrast-medium hover:text-primary transition-colors duration-[var(--motion-duration-short)] dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                    class="text-contrast-medium hover:text-primary transition-colors duration-200"
                     aria-label="X (Twitter)"
                 >
                     <svg
-                        class="w-7 h-7"
+                        class="w-5 h-5"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                     >
@@ -48,16 +42,15 @@
                         ></path>
                     </svg>
                 </a>
-
                 <a
                     href="https://www.instagram.com/aswaatulqurraa"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-contrast-medium hover:text-primary transition-colors duration-[var(--motion-duration-short)] dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                    class="text-contrast-medium hover:text-primary transition-colors duration-200"
                     aria-label="Instagram"
                 >
                     <svg
-                        class="w-7 h-7"
+                        class="w-5 h-5"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                     >
@@ -66,16 +59,15 @@
                         ></path>
                     </svg>
                 </a>
-
                 <a
                     href="https://youtube.com/user/aswaatulqurraa"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="text-contrast-medium hover:text-primary transition-colors duration-[var(--motion-duration-short)] dark:text-[#88898c] dark:hover:text-[#fbfcff]"
+                    class="text-contrast-medium hover:text-primary transition-colors duration-200"
                     aria-label="YouTube"
                 >
                     <svg
-                        class="w-7 h-7"
+                        class="w-5 h-5"
                         fill="currentColor"
                         viewBox="0 0 24 24"
                     >
@@ -85,16 +77,12 @@
                     </svg>
                 </a>
             </div>
-
             <!-- Copyright -->
-            <div
-                class="text-center text-[length:var(--font-size-x-small)] text-contrast-medium dark:text-[#88898c]"
+            <p
+                class="text-[length:var(--font-size-xx-small)] text-contrast-medium"
             >
-                <p>
-                    &copy; {new Date().getFullYear()} Aswaat ul Qurraa. All rights
-                    reserved.
-                </p>
-            </div>
+                &copy; {new Date().getFullYear()} Aswaat ul Qurraa
+            </p>
         </div>
     </div>
 </footer>
