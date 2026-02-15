@@ -59,7 +59,7 @@ export default function VenueSubmissionForm() {
           google_place_id: location.googlePlaceId || undefined,
           juz_per_night: juzPerNight ? Number(juzPerNight) : undefined,
           reader_names: readerNames.trim() || undefined,
-          whatsapp_number: whatsappNumber,
+          whatsapp_number: whatsappNumber.trim() || undefined,
         }),
       });
 

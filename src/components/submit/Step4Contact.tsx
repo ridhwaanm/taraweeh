@@ -12,7 +12,7 @@ export function Step4Contact({
   onBack,
 }: Step4ContactProps) {
   const cleanNumber = whatsappNumber.replace(/[\s\-()]/g, "");
-  const isValid = /^\+?\d{10,15}$/.test(cleanNumber);
+  const isValid = !cleanNumber || /^\+?\d{10,15}$/.test(cleanNumber);
 
   return (
     <div className="space-y-5">
@@ -21,13 +21,13 @@ export function Step4Contact({
           Contact Details
         </h2>
         <p className="text-[length:var(--font-size-x-small)] text-contrast-medium mt-1">
-          We need a WhatsApp number to verify your submission
+          Optionally provide a WhatsApp number so we can verify your submission
         </p>
       </div>
 
       <div>
         <label className="block text-[length:var(--font-size-small)] font-semibold text-primary mb-1.5">
-          WhatsApp Number <span className="text-notification-error">*</span>
+          WhatsApp Number
         </label>
         <input
           type="tel"

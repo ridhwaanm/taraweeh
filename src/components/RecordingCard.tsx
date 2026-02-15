@@ -71,7 +71,7 @@ export function RecordingCard({ recording, onPlay }: RecordingCardProps) {
   return (
     <motion.button
       onClick={() => onPlay(recording)}
-      className="group relative w-full text-left active:scale-[0.97] transition-transform duration-100"
+      className="group relative z-0 w-full text-left active:scale-[0.97] transition-transform duration-100"
       variants={{
         hidden: { opacity: 0, y: 12 },
         visible: { opacity: 1, y: 0 },
@@ -91,7 +91,7 @@ export function RecordingCard({ recording, onPlay }: RecordingCardProps) {
         )}
 
         {/* Source badge — top right with glow */}
-        <div className="absolute top-3 right-3 z-10">
+        <div className="absolute top-3 right-3">
           <span
             className={`inline-block px-2.5 py-1 rounded-full text-[0.65rem] font-bold uppercase tracking-wider ${
               isYouTube

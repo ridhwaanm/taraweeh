@@ -78,10 +78,10 @@ export const POST: APIRoute = async (context) => {
 
     // Clean WhatsApp number: strip spaces, hyphens, parens
     const cleanNumber = String(whatsapp_number || "").replace(/[\s\-()]/g, "");
-    if (!cleanNumber || !/^\+?\d{10,15}$/.test(cleanNumber)) {
+    if (cleanNumber && !/^\+?\d{10,15}$/.test(cleanNumber)) {
       return new Response(
         JSON.stringify({
-          error: "Valid WhatsApp number is required (10-15 digits)",
+          error: "WhatsApp number must be 10-15 digits",
           field: "whatsapp_number",
         }),
         { status: 400, headers: { "Content-Type": "application/json" } },
@@ -127,7 +127,7 @@ export const POST: APIRoute = async (context) => {
       google_place_id: google_place_id || undefined,
       juz_per_night: juz_per_night ? Number(juz_per_night) : undefined,
       reader_names: reader_names?.trim() || undefined,
-      whatsapp_number: cleanNumber,
+      whatsapp_number: cleanNumber || undefined,
     });
 
     return new Response(JSON.stringify({ success: true }), {

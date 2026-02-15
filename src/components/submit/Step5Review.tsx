@@ -126,6 +126,11 @@ export function Step5Review({
 
         <ReviewSection title="Contact" step={4} onEdit={onEdit}>
           <ReviewRow label="WhatsApp" value={data.whatsappNumber} />
+          {!data.whatsappNumber && (
+            <p className="text-[length:var(--font-size-x-small)] text-contrast-medium italic">
+              No contact number provided
+            </p>
+          )}
         </ReviewSection>
       </div>
 

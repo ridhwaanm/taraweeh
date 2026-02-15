@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { getApprovedVenueSubmissions } from "../lib/db";
+import VenuesMap from "../components/VenuesMap";
 
 export const prerender = false;
 
@@ -11,8 +12,14 @@ const venues = await getApprovedVenueSubmissions.all();
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
-        <meta name="description" content="Find Taraweeh venues near you across South Africa" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <meta
+            name="description"
+            content="Find Taraweeh venues near you across South Africa"
+        />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+        />
 
         <!-- Favicons -->
         <link rel="icon" href="/favicon-32x32.png" sizes="32x32" />
@@ -34,17 +41,28 @@ const venues = await getApprovedVenueSubmissions.all();
         <title>Venue Map — Taraweeh</title>
 
         <style>
-            html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                overflow: hidden;
+            }
         </style>
     </head>
     <body class="bg-background-base text-primary">
         {/* Header */}
-        <div class="h-12 flex items-center border-b border-contrast-low bg-white/95 backdrop-blur-sm relative z-[1001]" style="backdrop-filter: blur(8px);">
+        <div
+            class="h-12 flex items-center border-b border-contrast-low bg-white/95 backdrop-blur-sm relative z-[1001]"
+            style="backdrop-filter: blur(8px);"
+        >
             <div class="w-full px-4 flex items-center justify-between">
                 <a href="/" class="flex items-center gap-2">
                     <img src="/logo.png" alt="Taraweeh" class="h-7 w-7" />
                 </a>
-                <span class="text-[length:var(--font-size-small)] font-semibold text-primary">
+                <span
+                    class="text-[length:var(--font-size-small)] font-semibold text-primary"
+                >
                     Venue Map
                 </span>
                 <a
@@ -59,20 +77,7 @@ const venues = await getApprovedVenueSubmissions.all();
 
         {/* Map fills remaining viewport */}
         <div style="height: calc(100vh - 48px); width: 100%;">
-            <div id="map-root" style="width: 100%; height: 100%;"></div>
+            <VenuesMap venues={venues} client:only="react" />
         </div>
-
-        {/* Venue data injected as JSON for client-side hydration */}
-        <script type="application/json" id="venues-data" set:html={JSON.stringify(venues)} />
-
-        {/* Mount React map component */}
-        <script>
-            import { createElement } from "react";
-            import { createRoot } from "react-dom/client";
-            import VenuesMap from "../components/VenuesMap";
-
-            const root = createRoot(document.getElementById("map-root")!);
-            root.render(createElement(VenuesMap));
-        </script>
     </body>
 </html>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Drawer } from "vaul";
 import type { RecordingWithDetails } from "../lib/db";
@@ -27,6 +27,8 @@ export default function RecordingsPlayer({
   const [selectedMediaType, setSelectedMediaType] = useState("All");
   const [hafidhSearch, setHafidhSearch] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [searchType, setSearchType] = useState<"qari" | "venue">("qari");
+  const [showSearchTypeMenu, setShowSearchTypeMenu] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [currentRecording, setCurrentRecording] =
     useState<RecordingWithDetails | null>(null);
@@ -41,8 +43,15 @@ export default function RecordingsPlayer({
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Sort venues alphabetically
+  const sortedVenues = [...venues].sort((a, b) => a.localeCompare(b));
+
   const filteredHuffadh = huffadh.filter((h) =>
     h.toLowerCase().includes(hafidhSearch.toLowerCase()),
+  );
+
+  const filteredVenues = sortedVenues.filter((v) =>
+    v.toLowerCase().includes(hafidhSearch.toLowerCase()),
   );
 
   const filteredRecordings = recordings.filter((recording) => {
@@ -63,23 +72,6 @@ export default function RecordingsPlayer({
       return false;
     return true;
   });
-
-  // Group recordings by Qari
-  const groupedRecordings = useMemo(() => {
-    const groups: { name: string; recordings: RecordingWithDetails[] }[] = [];
-    const map = new Map<string, RecordingWithDetails[]>();
-    for (const rec of filteredRecordings) {
-      const existing = map.get(rec.hafidh_name);
-      if (existing) {
-        existing.push(rec);
-      } else {
-        const arr = [rec];
-        map.set(rec.hafidh_name, arr);
-        groups.push({ name: rec.hafidh_name, recordings: arr });
-      }
-    }
-    return groups;
-  }, [filteredRecordings]);
 
   const hasActiveFilters =
     selectedVenue !== "All" ||
@@ -120,9 +112,9 @@ export default function RecordingsPlayer({
     <div className="min-h-screen bg-background-base pb-32">
       {/* ===== Sticky Header ===== */}
       <div
-        className={`sticky top-0 z-20 transition-all duration-300 ${
+        className={`sticky top-0 z-30 transition-all duration-300 ${
           scrolled
-            ? "py-2 bg-background-surface/95 border-b border-contrast-low"
+            ? "py-2 bg-background-surface/95 backdrop-blur-md border-b border-contrast-low"
             : "py-4 bg-transparent"
         }`}
       >
@@ -153,17 +145,83 @@ export default function RecordingsPlayer({
                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                   />
                 </svg>
+
+                {/* Search type dropdown */}
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 z-40">
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowSearchTypeMenu((v) => !v)}
+                      className={`flex items-center gap-1 py-1 px-2.5 bg-teal-600/10 border border-teal-600/30 text-teal-700 text-[length:var(--font-size-x-small)] font-semibold focus:outline-none focus:ring-1 focus:ring-teal-500 rounded-full transition-colors hover:bg-teal-600/20 ${
+                        scrolled
+                          ? "text-[length:var(--font-size-xx-small)] py-0.5 px-2"
+                          : ""
+                      }`}
+                    >
+                      {searchType === "qari" ? "Qari" : "Venue"}
+                      <svg
+                        className={`w-3 h-3 transition-transform duration-200 ${showSearchTypeMenu ? "rotate-180" : ""}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2.5}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
+                    {showSearchTypeMenu && (
+                      <div className="absolute right-0 top-full mt-1 w-28 glass-card overflow-hidden shadow-lg">
+                        <button
+                          onMouseDown={() => {
+                            setSearchType("qari");
+                            setShowSearchTypeMenu(false);
+                            setHafidhSearch("");
+                          }}
+                          className={`w-full px-3 py-2 text-left text-[length:var(--font-size-x-small)] transition-colors ${
+                            searchType === "qari"
+                              ? "bg-teal-600/10 text-teal-700 font-semibold"
+                              : "text-primary hover:bg-background-shading"
+                          }`}
+                        >
+                          Qari
+                        </button>
+                        <button
+                          onMouseDown={() => {
+                            setSearchType("venue");
+                            setShowSearchTypeMenu(false);
+                            setHafidhSearch("");
+                          }}
+                          className={`w-full px-3 py-2 text-left text-[length:var(--font-size-x-small)] transition-colors ${
+                            searchType === "venue"
+                              ? "bg-teal-600/10 text-teal-700 font-semibold"
+                              : "text-primary hover:bg-background-shading"
+                          }`}
+                        >
+                          Venue
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <input
                   ref={searchRef}
                   type="text"
                   value={hafidhSearch}
                   onChange={(e) => setHafidhSearch(e.target.value)}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() =>
-                    setTimeout(() => setShowSuggestions(false), 200)
+                  onBlur={() => {
+                    setTimeout(() => setShowSuggestions(false), 200);
+                    setTimeout(() => setShowSearchTypeMenu(false), 200);
+                  }}
+                  placeholder={
+                    selectedHafidh ||
+                    `Search ${searchType === "qari" ? "qari" : "venue"}...`
                   }
-                  placeholder={selectedHafidh || "Search Qari..."}
-                  className={`w-full pl-10 pr-10 bg-background-surface border border-contrast-low text-primary text-[length:var(--font-size-small)] placeholder:text-contrast-medium focus:outline-none focus:ring-2 focus:ring-state-focus focus:border-transparent transition-all duration-300 ${
+                  className={`w-full pl-10 pr-22 bg-background-surface border border-contrast-low text-primary text-[length:var(--font-size-small)] placeholder:text-contrast-medium focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all duration-300 ${
                     scrolled
                       ? "py-1.5 rounded-full text-[length:var(--font-size-x-small)]"
                       : "py-2.5 rounded-full"
@@ -196,7 +254,7 @@ export default function RecordingsPlayer({
               {/* Suggestions dropdown */}
               {showSuggestions && hafidhSearch && (
                 <div className="absolute z-30 w-full mt-1 glass-card max-h-60 overflow-y-auto">
-                  {filteredHuffadh.length > 0 ? (
+                  {searchType === "qari" && filteredHuffadh.length > 0 ? (
                     filteredHuffadh.map((hafidh) => (
                       <button
                         key={hafidh}
@@ -210,9 +268,23 @@ export default function RecordingsPlayer({
                         {hafidh}
                       </button>
                     ))
+                  ) : searchType === "venue" && filteredVenues.length > 0 ? (
+                    filteredVenues.map((venue) => (
+                      <button
+                        key={venue}
+                        onMouseDown={() => {
+                          setSelectedVenue(venue);
+                          setHafidhSearch("");
+                          setShowSuggestions(false);
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-primary hover:bg-background-shading transition-colors text-[length:var(--font-size-small)]"
+                      >
+                        {venue}
+                      </button>
+                    ))
                   ) : (
                     <div className="px-4 py-2.5 text-contrast-medium text-[length:var(--font-size-small)]">
-                      No Qaris found
+                      No {searchType}s found
                     </div>
                   )}
                 </div>
@@ -330,7 +402,7 @@ export default function RecordingsPlayer({
       </div>
 
       {/* ===== Filter Chips ===== */}
-      <div className="sticky top-[52px] z-10 bg-background-base/90 border-b border-contrast-low">
+      <div className="sticky top-[52px] z-20 bg-background-base/90 backdrop-blur-md border-b border-contrast-low">
         <div className="max-w-7xl mx-auto px-4 py-2.5">
           <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
             {/* Result count */}
@@ -343,6 +415,15 @@ export default function RecordingsPlayer({
             </div>
 
             <div className="w-px h-5 bg-contrast-low shrink-0 mx-1" />
+
+            {/* Advanced filters — opens Vaul bottom sheet on mobile, inline on desktop */}
+            <AdvancedFilterButton
+              venues={sortedVenues}
+              selectedVenue={selectedVenue}
+              setSelectedVenue={setSelectedVenue}
+              hasActiveFilters={hasActiveFilters}
+              clearAllFilters={clearAllFilters}
+            />
 
             {/* City chips */}
             {cities.map((city) => (
@@ -389,59 +470,31 @@ export default function RecordingsPlayer({
                 )
               }
             />
-
-            {/* Advanced filters — opens Vaul bottom sheet on mobile, inline on desktop */}
-            <AdvancedFilterButton
-              venues={venues}
-              selectedVenue={selectedVenue}
-              setSelectedVenue={setSelectedVenue}
-              hasActiveFilters={hasActiveFilters}
-              clearAllFilters={clearAllFilters}
-            />
           </div>
         </div>
       </div>
 
       {/* ===== Main Content — Grouped by Qari ===== */}
       <div className="max-w-7xl mx-auto px-4 pt-6 pb-8">
-        {groupedRecordings.length > 0 ? (
-          <div className="space-y-8">
-            {groupedRecordings.map((group, groupIdx) => (
-              <div key={group.name}>
-                {groupIdx > 0 && <div className="gradient-divider mb-8" />}
-                {/* Sticky Qari header */}
-                <div className="sticky top-[108px] z-[5] bg-background-base/95 py-2 mb-4">
-                  <h2 className="text-[length:var(--font-size-medium)] font-bold text-primary">
-                    {group.name}
-                    <span className="ml-2 text-[length:var(--font-size-xx-small)] text-contrast-medium font-normal">
-                      {group.recordings.length} recording
-                      {group.recordings.length !== 1 ? "s" : ""}
-                    </span>
-                  </h2>
-                </div>
-
-                {/* 2-col mobile, 3-col desktop grid */}
-                <motion.div
-                  className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-[var(--spacing-fluid-md)]"
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: {
-                      transition: { staggerChildren: 0.05 },
-                    },
-                  }}
-                >
-                  {group.recordings.map((recording) => (
-                    <RecordingCard
-                      key={recording.id}
-                      recording={recording}
-                      onPlay={playRecording}
-                    />
-                  ))}
-                </motion.div>
-              </div>
+        {filteredRecordings.length > 0 ? (
+          <motion.div
+            className="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-[var(--spacing-fluid-md)]"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: {
+                transition: { staggerChildren: 0.03 },
+              },
+            }}
+          >
+            {filteredRecordings.map((recording) => (
+              <RecordingCard
+                key={recording.id}
+                recording={recording}
+                onPlay={playRecording}
+              />
             ))}
-          </div>
+          </motion.div>
         ) : (
           <div className="text-center py-20">
             <h3 className="text-[length:var(--font-size-x-large)] text-primary font-bold mb-3">
@@ -453,7 +506,7 @@ export default function RecordingsPlayer({
             {(hasActiveFilters || selectedHafidh) && (
               <button
                 onClick={clearAllFilters}
-                className="px-4 py-2 rounded-full bg-state-focus text-white text-[length:var(--font-size-small)] font-semibold hover:opacity-90 transition-opacity"
+                className="px-4 py-2 rounded-full bg-teal-600 text-white text-[length:var(--font-size-small)] font-semibold hover:bg-teal-700 transition-colors"
               >
                 Clear all filters
               </button>
@@ -470,7 +523,7 @@ export default function RecordingsPlayer({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 glass-card border-t border-contrast-low z-30"
+            className="fixed bottom-0 left-0 right-0 glass-card border-t border-contrast-low z-40"
           >
             <div className="h-[320px] flex flex-col">
               <div className="flex items-center justify-between px-4 py-3">
@@ -528,7 +581,7 @@ export default function RecordingsPlayer({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed bottom-0 left-0 right-0 glass-card border-t border-contrast-low z-30"
+            className="fixed bottom-0 left-0 right-0 glass-card border-t border-contrast-low z-40"
           >
             <div className="h-[200px] flex flex-col">
               <div className="flex items-center justify-between px-4 py-3">
@@ -595,7 +648,7 @@ function FilterChip({
       onClick={onClick}
       className={`shrink-0 px-3 py-1 rounded-full text-[length:var(--font-size-xx-small)] font-semibold transition-colors whitespace-nowrap ${
         active
-          ? "bg-state-focus text-white"
+          ? "bg-teal-600 text-white"
           : "bg-background-surface text-contrast-medium hover:text-primary"
       }`}
     >
@@ -637,7 +690,7 @@ function AdvancedFilterButton({
           </svg>
           Venue
           {hasActiveFilters && (
-            <span className="w-1.5 h-1.5 rounded-full bg-state-focus" />
+            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
           )}
         </button>
       </Drawer.Trigger>
@@ -655,7 +708,7 @@ function AdvancedFilterButton({
               {hasActiveFilters && (
                 <button
                   onClick={clearAllFilters}
-                  className="text-[length:var(--font-size-x-small)] text-state-focus font-semibold"
+                  className="text-[length:var(--font-size-x-small)] text-teal-600 font-semibold"
                 >
                   Clear all
                 </button>
@@ -699,7 +752,7 @@ function DrawerOption({
         onClick={onClick}
         className={`w-full text-left px-3 py-2.5 rounded-[var(--radius-md)] text-[length:var(--font-size-small)] transition-colors ${
           active
-            ? "bg-state-focus/15 text-state-focus font-semibold"
+            ? "bg-teal-600/15 text-teal-700 font-semibold"
             : "text-primary hover:bg-background-shading"
         }`}
       >
