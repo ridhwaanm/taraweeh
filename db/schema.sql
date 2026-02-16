@@ -56,7 +56,7 @@ CREATE TABLE IF NOT EXISTS venue_submissions (
     google_place_id   TEXT,
     juz_per_night     REAL,
     reader_names      TEXT,
-    whatsapp_number   TEXT NOT NULL,
+    whatsapp_number   TEXT,
     status            TEXT NOT NULL DEFAULT 'pending'
                         CHECK(status IN ('pending', 'approved', 'rejected')),
     admin_notes       TEXT,

@@ -304,7 +304,7 @@ export const insertVenueSubmission = {
     google_place_id?: string;
     juz_per_night?: number;
     reader_names?: string;
-    whatsapp_number: string;
+    whatsapp_number?: string;
   }) => {
     return await db.execute({
       sql: `INSERT INTO venue_submissions
@@ -322,7 +322,7 @@ export const insertVenueSubmission = {
         data.google_place_id || null,
         data.juz_per_night || null,
         data.reader_names || null,
-        data.whatsapp_number,
+        data.whatsapp_number || null,
       ],
     });
   },

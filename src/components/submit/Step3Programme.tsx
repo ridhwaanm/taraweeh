@@ -4,6 +4,7 @@ const JUZ_OPTIONS = [
   { label: "¼ Juz", value: "0.25" },
   { label: "½ Juz", value: "0.5" },
   { label: "1 Juz", value: "1" },
+  { label: "1¼ Juz", value: "1.25" },
   { label: "1½ Juz", value: "1.5" },
   { label: "2 Juz", value: "2" },
   { label: "3 Juz", value: "3" },
