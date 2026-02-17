@@ -4,6 +4,7 @@ import {
   getVenueSubmissions,
   getVenueSubmissionById,
   approveVenueSubmission,
+  bulkApproveVenueSubmissions,
   rejectVenueSubmission,
   updateVenueSubmission,
   db,
@@ -80,18 +81,8 @@ export const PATCH: APIRoute = async (context) => {
           { status: 200, headers: { "Content-Type": "application/json" } },
         );
       }
-      // Bulk approve — use each submission's own venue_name and city
-      let count = 0;
-      for (const id of ids) {
-        const sub = await getVenueSubmissionById.get(id);
-        if (sub && sub.status === "pending") {
-          const name = sub.sub_venue_name
-            ? `${sub.venue_name} — ${sub.sub_venue_name}`
-            : sub.venue_name;
-          await approveVenueSubmission(id, name, sub.city);
-          count++;
-        }
-      }
+      // Bulk approve — batch operation
+      const count = await bulkApproveVenueSubmissions(ids);
       return new Response(JSON.stringify({ success: true, count }), {
         status: 200,
         headers: { "Content-Type": "application/json" },

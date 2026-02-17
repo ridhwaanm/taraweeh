@@ -21,6 +21,7 @@ import {
   PencilIcon,
   ArrowUpTrayIcon,
 } from "@heroicons/react/24/outline";
+import { AnimatePresence, motion } from "motion/react";
 
 interface VenueSubmission {
   id: number;
@@ -154,11 +155,25 @@ export function VenueSubmissionsTable() {
   const [importResult, setImportResult] = useState<{
     total: number;
     imported: number;
+    duplicates: number;
     errors: number;
     errorDetails: string[];
   } | null>(null);
   const [importError, setImportError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Success toast
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(null), 4000);
+  };
+
+  // Pagination
+  const PAGE_SIZE = 25;
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     fetchSubmissions();
@@ -166,6 +181,7 @@ export function VenueSubmissionsTable() {
 
   useEffect(() => {
     setSelectedIds(new Set());
+    setPage(1);
   }, [activeTab]);
 
   const fetchSubmissions = async () => {
@@ -184,6 +200,13 @@ export function VenueSubmissionsTable() {
     }
   };
 
+  // Sorted + paginated data
+  const sorted = [...submissions].sort((a, b) =>
+    a.venue_name.localeCompare(b.venue_name),
+  );
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+  const paged = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   // --- Selection helpers ---
   const toggleSelect = (id: number) => {
     setSelectedIds((prev) => {
@@ -195,10 +218,16 @@ export function VenueSubmissionsTable() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.size === submissions.length) {
-      setSelectedIds(new Set());
+    const pageIds = paged.map((s) => s.id);
+    const allPageSelected = pageIds.every((id) => selectedIds.has(id));
+    if (allPageSelected) {
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        pageIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(submissions.map((s) => s.id)));
+      setSelectedIds((prev) => new Set([...prev, ...pageIds]));
     }
   };
 
@@ -371,8 +400,10 @@ export function VenueSubmissionsTable() {
         body: JSON.stringify({ ids: selectedArray, action: "approve" }),
       });
       if (!res.ok) throw new Error("Failed to bulk approve");
+      const data = await res.json();
       setIsBulkApproveOpen(false);
       setSelectedIds(new Set());
+      showToast(`${data.count} venue${data.count !== 1 ? "s" : ""} approved`);
       fetchSubmissions();
     } catch (err: any) {
       setError(err.message);
@@ -525,7 +556,23 @@ export function VenueSubmissionsTable() {
   ];
 
   return (
-    <div>
+    <div className="relative">
+      {/* Success toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.25 }}
+            className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg"
+          >
+            <CheckCircleIcon className="h-5 w-5" />
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-lg font-semibold text-zinc-900 dark:text-white">
@@ -608,129 +655,199 @@ export function VenueSubmissionsTable() {
       )}
 
       {!loading && submissions.length > 0 && (
-        <div className="overflow-x-auto">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableHeader className="w-10">
-                  <Checkbox
-                    color="indigo"
-                    checked={selectedIds.size === submissions.length}
-                    indeterminate={
-                      selectedIds.size > 0 &&
-                      selectedIds.size < submissions.length
-                    }
-                    onChange={toggleSelectAll}
-                  />
-                </TableHeader>
-                <TableHeader>Venue</TableHeader>
-                <TableHeader>City</TableHeader>
-                <TableHeader>Juz</TableHeader>
-                <TableHeader>Readers</TableHeader>
-                <TableHeader>WhatsApp</TableHeader>
-                <TableHeader>Date</TableHeader>
-                <TableHeader>Actions</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {submissions.map((sub) => (
-                <TableRow key={sub.id}>
-                  <TableCell>
+        <>
+          <div className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+            {submissions.length} total &middot; Page {page} of {totalPages}
+          </div>
+          <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <Table className="min-w-[900px]">
+              <TableHead>
+                <TableRow>
+                  <TableHeader className="w-10">
                     <Checkbox
                       color="indigo"
-                      checked={selectedIds.has(sub.id)}
-                      onChange={() => toggleSelect(sub.id)}
+                      checked={
+                        paged.length > 0 &&
+                        paged.every((s) => selectedIds.has(s.id))
+                      }
+                      indeterminate={
+                        paged.some((s) => selectedIds.has(s.id)) &&
+                        !paged.every((s) => selectedIds.has(s.id))
+                      }
+                      onChange={toggleSelectAll}
                     />
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{sub.venue_name}</div>
-                      {sub.sub_venue_name && (
-                        <div className="text-xs text-zinc-500">
-                          {sub.sub_venue_name}
-                        </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>{sub.city}</TableCell>
-                  <TableCell>{sub.juz_per_night || "—"}</TableCell>
-                  <TableCell>
-                    <div className="max-w-[200px] truncate text-sm">
-                      {sub.reader_names || "—"}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {sub.whatsapp_number ? (
-                      <a
-                        href={`https://wa.me/${sub.whatsapp_number.replace(/^\+/, "")}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-indigo-600 hover:underline text-sm"
-                      >
-                        {sub.whatsapp_number}
-                      </a>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {new Date(sub.submitted_at).toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button
-                        plain
-                        onClick={() =>
-                          window.open(
-                            `https://www.google.com/maps?q=${sub.latitude},${sub.longitude}`,
-                            "_blank",
-                          )
-                        }
-                        title="View on map"
-                      >
-                        <MapPinIcon data-slot="icon" />
-                      </Button>
-                      <Button plain onClick={() => openEdit(sub)} title="Edit">
-                        <PencilIcon data-slot="icon" />
-                      </Button>
-                      {activeTab === "pending" && (
-                        <>
-                          <Button
-                            plain
-                            onClick={() => openApprove(sub)}
-                            title="Approve"
-                          >
-                            <CheckCircleIcon
-                              data-slot="icon"
-                              className="text-green-600"
-                            />
-                          </Button>
-                          <Button
-                            plain
-                            onClick={() => openReject(sub)}
-                            title="Reject"
-                          >
-                            <XCircleIcon
-                              data-slot="icon"
-                              className="text-amber-600"
-                            />
-                          </Button>
-                        </>
-                      )}
-                      <Button
-                        plain
-                        onClick={() => openDelete(sub)}
-                        title="Delete"
-                      >
-                        <TrashIcon data-slot="icon" className="text-red-600" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  </TableHeader>
+                  <TableHeader>Venue</TableHeader>
+                  <TableHeader>City</TableHeader>
+                  <TableHeader>Juz</TableHeader>
+                  <TableHeader>Readers</TableHeader>
+                  <TableHeader>WhatsApp</TableHeader>
+                  <TableHeader>Date</TableHeader>
+                  <TableHeader>Actions</TableHeader>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+              </TableHead>
+              <TableBody>
+                {paged.map((sub) => (
+                  <TableRow key={sub.id}>
+                    <TableCell>
+                      <Checkbox
+                        color="indigo"
+                        checked={selectedIds.has(sub.id)}
+                        onChange={() => toggleSelect(sub.id)}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">{sub.venue_name}</div>
+                        {sub.sub_venue_name && (
+                          <div className="text-xs text-zinc-500">
+                            {sub.sub_venue_name}
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>{sub.city}</TableCell>
+                    <TableCell>{sub.juz_per_night || "—"}</TableCell>
+                    <TableCell>
+                      <div className="max-w-[200px] truncate text-sm">
+                        {sub.reader_names || "—"}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {sub.whatsapp_number ? (
+                        <a
+                          href={`https://wa.me/${sub.whatsapp_number.replace(/^\+/, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-indigo-600 hover:underline text-sm"
+                        >
+                          {sub.whatsapp_number}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {new Date(sub.submitted_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button
+                          plain
+                          onClick={() =>
+                            window.open(
+                              `https://www.google.com/maps?q=${sub.latitude},${sub.longitude}`,
+                              "_blank",
+                            )
+                          }
+                          title="View on map"
+                        >
+                          <MapPinIcon data-slot="icon" />
+                        </Button>
+                        <Button
+                          plain
+                          onClick={() => openEdit(sub)}
+                          title="Edit"
+                        >
+                          <PencilIcon data-slot="icon" />
+                        </Button>
+                        {activeTab === "pending" && (
+                          <>
+                            <Button
+                              plain
+                              onClick={() => openApprove(sub)}
+                              title="Approve"
+                            >
+                              <CheckCircleIcon
+                                data-slot="icon"
+                                className="text-green-600"
+                              />
+                            </Button>
+                            <Button
+                              plain
+                              onClick={() => openReject(sub)}
+                              title="Reject"
+                            >
+                              <XCircleIcon
+                                data-slot="icon"
+                                className="text-amber-600"
+                              />
+                            </Button>
+                          </>
+                        )}
+                        <Button
+                          plain
+                          onClick={() => openDelete(sub)}
+                          title="Delete"
+                        >
+                          <TrashIcon
+                            data-slot="icon"
+                            className="text-red-600"
+                          />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <Button
+                plain
+                disabled={page <= 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <div className="flex gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(
+                    (p) =>
+                      p === 1 || p === totalPages || Math.abs(p - page) <= 2,
+                  )
+                  .reduce<(number | "...")[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i - 1] as number) > 1)
+                      acc.push("...");
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    p === "..." ? (
+                      <span
+                        key={`ellipsis-${i}`}
+                        className="px-2 py-1 text-sm text-zinc-400"
+                      >
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={p}
+                        onClick={() => setPage(p as number)}
+                        className={`min-w-[2rem] rounded px-2 py-1 text-sm ${
+                          page === p
+                            ? "bg-indigo-600 text-white"
+                            : "text-zinc-600 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ),
+                  )}
+              </div>
+              <Button
+                plain
+                disabled={page >= totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
+            </div>
+          )}
+        </>
       )}
 
       {/* ===== DIALOGS ===== */}
@@ -969,16 +1086,36 @@ export function VenueSubmissionsTable() {
       </Dialog>
 
       {/* Bulk Approve Dialog */}
-      <Dialog open={isBulkApproveOpen} onClose={setIsBulkApproveOpen}>
+      <Dialog
+        open={isBulkApproveOpen}
+        onClose={bulkActionLoading ? () => {} : setIsBulkApproveOpen}
+      >
         <DialogTitle>Bulk Approve</DialogTitle>
         <DialogBody>
-          <p className="text-sm text-zinc-600 dark:text-zinc-400">
-            Approve <strong>{selectedIds.size}</strong> selected submissions?
-            Each venue will be created using its submitted name and city.
-          </p>
+          {bulkActionLoading ? (
+            <div className="flex flex-col items-center gap-3 py-4">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="h-8 w-8 rounded-full border-2 border-zinc-200 border-t-green-600 dark:border-zinc-700 dark:border-t-green-400"
+              />
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Approving {selectedIds.size} submissions...
+              </p>
+            </div>
+          ) : (
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">
+              Approve <strong>{selectedIds.size}</strong> selected submissions?
+              Each venue will be created using its submitted name and city.
+            </p>
+          )}
         </DialogBody>
         <DialogActions>
-          <Button plain onClick={() => setIsBulkApproveOpen(false)}>
+          <Button
+            plain
+            onClick={() => setIsBulkApproveOpen(false)}
+            disabled={bulkActionLoading}
+          >
             Cancel
           </Button>
           <Button
@@ -1162,25 +1299,45 @@ export function VenueSubmissionsTable() {
           )}
 
           {importStep === "importing" && (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Importing {validCount} submissions...
-            </p>
+            <div className="flex flex-col items-center gap-3 py-6">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                className="h-8 w-8 rounded-full border-2 border-zinc-200 border-t-indigo-600 dark:border-zinc-700 dark:border-t-indigo-400"
+              />
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Importing {validCount} submissions...
+              </p>
+            </div>
           )}
 
           {importStep === "done" && importResult && (
-            <div className="rounded-lg bg-green-50 p-4 dark:bg-green-950/30">
-              <h3 className="text-sm font-medium text-green-800 dark:text-green-300">
-                Import Complete
-              </h3>
-              <div className="mt-2 text-sm text-green-700 dark:text-green-400">
-                <p>Total: {importResult.total}</p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.25 }}
+              className="rounded-lg bg-green-50 p-4 dark:bg-green-950/30"
+            >
+              <div className="flex items-center gap-2">
+                <CheckCircleIcon className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <h3 className="text-sm font-medium text-green-800 dark:text-green-300">
+                  Import Complete
+                </h3>
+              </div>
+              <div className="mt-2 space-y-1 text-sm text-green-700 dark:text-green-400">
+                <p>Total rows: {importResult.total}</p>
                 <p>Imported: {importResult.imported}</p>
+                {importResult.duplicates > 0 && (
+                  <p className="text-amber-600 dark:text-amber-400">
+                    Duplicates skipped: {importResult.duplicates}
+                  </p>
+                )}
                 {importResult.errors > 0 && (
                   <>
-                    <p className="text-red-600">
+                    <p className="text-red-600 dark:text-red-400">
                       Errors: {importResult.errors}
                     </p>
-                    <ul className="mt-1 list-inside list-disc text-xs text-red-500">
+                    <ul className="mt-1 list-inside list-disc text-xs text-red-500 dark:text-red-400">
                       {importResult.errorDetails.map((d, i) => (
                         <li key={i}>{d}</li>
                       ))}
@@ -1188,7 +1345,7 @@ export function VenueSubmissionsTable() {
                   </>
                 )}
               </div>
-            </div>
+            </motion.div>
           )}
 
           {importStep === "error" && (

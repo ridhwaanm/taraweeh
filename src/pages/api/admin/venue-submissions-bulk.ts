@@ -1,8 +1,19 @@
 import type { APIRoute } from "astro";
 import { getAuth } from "../../../lib/auth";
-import { insertVenueSubmission } from "../../../lib/db";
+import { bulkInsertVenueSubmissions } from "../../../lib/db";
 
 export const prerender = false;
+
+function stripWrappingQuotes(s: string): string {
+  if (
+    s.length >= 2 &&
+    ((s[0] === "'" && s[s.length - 1] === "'") ||
+      (s[0] === '"' && s[s.length - 1] === '"'))
+  ) {
+    return s.slice(1, -1);
+  }
+  return s;
+}
 
 export const POST: APIRoute = async (context) => {
   const auth = getAuth();
@@ -26,60 +37,39 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    let imported = 0;
-    let errors = 0;
-    const errorDetails: string[] = [];
+    const rows = submissions.map((sub: Record<string, string>) => ({
+      venue_name: (sub.venue_name || "").trim(),
+      sub_venue_name: (sub.sub_venue_name || "").trim() || undefined,
+      address_full: (sub.address_full || "").trim(),
+      city: (sub.city || "").trim(),
+      province: (sub.province || "").trim() || undefined,
+      country: (sub.country || "").trim() || "ZA",
+      latitude: parseFloat(sub.latitude),
+      longitude: parseFloat(sub.longitude),
+      google_place_id: (sub.google_place_id || "").trim() || undefined,
+      juz_per_night: sub.juz_per_night
+        ? parseFloat(sub.juz_per_night)
+        : undefined,
+      reader_names: sub.reader_names
+        ? stripWrappingQuotes(sub.reader_names.trim())
+        : undefined,
+      whatsapp_number: (sub.whatsapp_number || "").trim() || undefined,
+    }));
 
-    for (let i = 0; i < submissions.length; i++) {
-      const sub = submissions[i];
-      try {
-        // Validate required fields
-        if (!sub.venue_name || !sub.address_full || !sub.city) {
-          throw new Error(
-            "Missing required field (venue_name, address_full, or city)",
-          );
-        }
-        const lat = parseFloat(sub.latitude);
-        const lng = parseFloat(sub.longitude);
-        if (!isFinite(lat) || !isFinite(lng)) {
-          throw new Error("Invalid latitude or longitude");
-        }
-
-        await insertVenueSubmission.run({
-          venue_name: sub.venue_name,
-          sub_venue_name: sub.sub_venue_name || undefined,
-          address_full: sub.address_full,
-          city: sub.city,
-          province: sub.province || undefined,
-          country: sub.country || "ZA",
-          latitude: lat,
-          longitude: lng,
-          google_place_id: sub.google_place_id || undefined,
-          juz_per_night: sub.juz_per_night
-            ? parseFloat(sub.juz_per_night)
-            : undefined,
-          reader_names: sub.reader_names || undefined,
-          whatsapp_number: sub.whatsapp_number || undefined,
-        });
-        imported++;
-      } catch (err: any) {
-        errors++;
-        errorDetails.push(
-          `Row ${i + 1} (${sub.venue_name || "unknown"}): ${err.message}`,
-        );
-      }
-    }
+    const result = await bulkInsertVenueSubmissions(rows);
 
     return new Response(
       JSON.stringify({
         total: submissions.length,
-        imported,
-        errors,
-        errorDetails,
+        imported: result.imported,
+        duplicates: result.duplicates,
+        errors: result.errors,
+        errorDetails: result.errorDetails,
       }),
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   } catch (error) {
+    console.error("Failed to import submissions:", error);
     return new Response(
       JSON.stringify({ error: "Failed to import submissions" }),
       { status: 500 },

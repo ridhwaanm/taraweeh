@@ -417,6 +417,203 @@ export async function rejectVenueSubmission(
   });
 }
 
+export async function bulkApproveVenueSubmissions(
+  ids: number[],
+): Promise<number> {
+  if (ids.length === 0) return 0;
+
+  // 1. Fetch all pending submissions in one query
+  const placeholders = ids.map(() => "?").join(", ");
+  const result = await db.execute({
+    sql: `SELECT id, venue_name, sub_venue_name, city FROM venue_submissions WHERE id IN (${placeholders}) AND status = 'pending'`,
+    args: ids,
+  });
+  const subs = resultToArray<{
+    id: number;
+    venue_name: string;
+    sub_venue_name: string | null;
+    city: string;
+  }>(result);
+  if (subs.length === 0) return 0;
+
+  // 2. Build venue lookup from existing venues
+  const existingVenues = await db.execute("SELECT id, name, city FROM venues");
+  const venueMap = new Map<string, number>();
+  for (const row of resultToArray<{ id: number; name: string; city: string }>(
+    existingVenues,
+  )) {
+    venueMap.set(`${row.name}|||${row.city}`, row.id);
+  }
+
+  // 3. Determine which venues need creating (deduplicated)
+  const uniqueNewVenues = new Map<string, { name: string; city: string }>();
+  for (const s of subs) {
+    const name = s.sub_venue_name
+      ? `${s.venue_name} — ${s.sub_venue_name}`
+      : s.venue_name;
+    const key = `${name}|||${s.city}`;
+    if (!venueMap.has(key)) uniqueNewVenues.set(key, { name, city: s.city });
+  }
+
+  // 4. Batch-insert missing venues
+  if (uniqueNewVenues.size > 0) {
+    const insertStmts = [...uniqueNewVenues.values()].map((k) => ({
+      sql: "INSERT INTO venues (name, city) VALUES (?, ?)",
+      args: [k.name, k.city] as (string | number | null)[],
+    }));
+    for (let i = 0; i < insertStmts.length; i += 100) {
+      await db.batch(insertStmts.slice(i, i + 100), "write");
+    }
+    // Re-fetch all venue IDs
+    const allVenues = await db.execute("SELECT id, name, city FROM venues");
+    venueMap.clear();
+    for (const row of resultToArray<{
+      id: number;
+      name: string;
+      city: string;
+    }>(allVenues)) {
+      venueMap.set(`${row.name}|||${row.city}`, row.id);
+    }
+  }
+
+  // 5. Batch-update all submissions to approved
+  const updateStmts = subs.map((s) => {
+    const name = s.sub_venue_name
+      ? `${s.venue_name} — ${s.sub_venue_name}`
+      : s.venue_name;
+    const venueId = venueMap.get(`${name}|||${s.city}`)!;
+    return {
+      sql: "UPDATE venue_submissions SET status = 'approved', approved_venue_id = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?",
+      args: [venueId, s.id] as (string | number | null)[],
+    };
+  });
+  for (let i = 0; i < updateStmts.length; i += 100) {
+    await db.batch(updateStmts.slice(i, i + 100), "write");
+  }
+
+  return subs.length;
+}
+
+interface BulkImportRow {
+  venue_name: string;
+  sub_venue_name?: string;
+  address_full: string;
+  city: string;
+  province?: string;
+  country?: string;
+  latitude: number;
+  longitude: number;
+  google_place_id?: string;
+  juz_per_night?: number;
+  reader_names?: string;
+  whatsapp_number?: string;
+}
+
+export async function bulkInsertVenueSubmissions(
+  submissions: BulkImportRow[],
+): Promise<{
+  imported: number;
+  duplicates: number;
+  errors: number;
+  errorDetails: string[];
+}> {
+  let imported = 0;
+  let duplicates = 0;
+  let errors = 0;
+  const errorDetails: string[] = [];
+
+  // Validate all rows first
+  const valid: { row: BulkImportRow; index: number }[] = [];
+  for (let i = 0; i < submissions.length; i++) {
+    const sub = submissions[i];
+    if (!sub.venue_name || !sub.address_full || !sub.city) {
+      errors++;
+      errorDetails.push(
+        `Row ${i + 1} (${sub.venue_name || "unknown"}): Missing required field`,
+      );
+      continue;
+    }
+    if (!isFinite(sub.latitude) || !isFinite(sub.longitude)) {
+      errors++;
+      errorDetails.push(
+        `Row ${i + 1} (${sub.venue_name}): Invalid latitude or longitude`,
+      );
+      continue;
+    }
+    valid.push({ row: sub, index: i });
+  }
+
+  // Fetch existing submissions for dedup (match on venue_name + city + latitude + longitude)
+  const existing = await db.execute(
+    "SELECT venue_name, city, latitude, longitude FROM venue_submissions",
+  );
+  const existingKeys = new Set(
+    resultToArray<{
+      venue_name: string;
+      city: string;
+      latitude: number;
+      longitude: number;
+    }>(existing).map(
+      (r) => `${r.venue_name}|||${r.city}|||${r.latitude}|||${r.longitude}`,
+    ),
+  );
+
+  // Deduplicate within the import itself and against DB
+  const seenInBatch = new Set<string>();
+  const toInsert: { row: BulkImportRow; index: number }[] = [];
+  for (const entry of valid) {
+    const key = `${entry.row.venue_name}|||${entry.row.city}|||${entry.row.latitude}|||${entry.row.longitude}`;
+    if (existingKeys.has(key) || seenInBatch.has(key)) {
+      duplicates++;
+      continue;
+    }
+    seenInBatch.add(key);
+    toInsert.push(entry);
+  }
+
+  // Batch insert in chunks of 100
+  for (let i = 0; i < toInsert.length; i += 100) {
+    const chunk = toInsert.slice(i, i + 100);
+    const stmts = chunk.map(({ row: sub }) => ({
+      sql: `INSERT INTO venue_submissions
+        (venue_name, sub_venue_name, address_full, city, province, country, latitude, longitude, google_place_id, juz_per_night, reader_names, whatsapp_number)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        sub.venue_name,
+        sub.sub_venue_name || null,
+        sub.address_full,
+        sub.city,
+        sub.province || null,
+        sub.country || "ZA",
+        sub.latitude,
+        sub.longitude,
+        sub.google_place_id || null,
+        sub.juz_per_night || null,
+        sub.reader_names || null,
+        sub.whatsapp_number || null,
+      ] as (string | number | null)[],
+    }));
+    try {
+      await db.batch(stmts, "write");
+      imported += chunk.length;
+    } catch (err: any) {
+      for (let j = 0; j < chunk.length; j++) {
+        try {
+          await db.execute(stmts[j]);
+          imported++;
+        } catch (innerErr: any) {
+          errors++;
+          errorDetails.push(
+            `Row ${chunk[j].index + 1} (${chunk[j].row.venue_name}): ${innerErr.message}`,
+          );
+        }
+      }
+    }
+  }
+
+  return { imported, duplicates, errors, errorDetails };
+}
+
 // Public venue data (no sensitive fields)
 export interface PublicVenue {
   id: number;
