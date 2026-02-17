@@ -283,7 +283,7 @@ export interface VenueSubmission {
   google_place_id: string | null;
   juz_per_night: number | null;
   reader_names: string | null;
-  whatsapp_number: string;
+  whatsapp_number: string | null;
   status: "pending" | "approved" | "rejected";
   admin_notes: string | null;
   approved_venue_id: number | null;
@@ -343,6 +343,52 @@ export const getVenueSubmissions = {
     return resultToArray<VenueSubmission>(result);
   },
 };
+
+export const getVenueSubmissionById = {
+  get: async (id: number) => {
+    const result = await db.execute({
+      sql: "SELECT * FROM venue_submissions WHERE id = ?",
+      args: [id],
+    });
+    return resultToArray<VenueSubmission>(result)[0];
+  },
+};
+
+export async function updateVenueSubmission(
+  id: number,
+  data: {
+    venue_name: string;
+    sub_venue_name?: string | null;
+    address_full: string;
+    city: string;
+    province?: string | null;
+    latitude: number;
+    longitude: number;
+    juz_per_night?: number | null;
+    reader_names?: string | null;
+    whatsapp_number?: string | null;
+  },
+): Promise<void> {
+  await db.execute({
+    sql: `UPDATE venue_submissions
+      SET venue_name = ?, sub_venue_name = ?, address_full = ?, city = ?, province = ?,
+          latitude = ?, longitude = ?, juz_per_night = ?, reader_names = ?, whatsapp_number = ?
+      WHERE id = ?`,
+    args: [
+      data.venue_name,
+      data.sub_venue_name || null,
+      data.address_full,
+      data.city,
+      data.province || null,
+      data.latitude,
+      data.longitude,
+      data.juz_per_night || null,
+      data.reader_names || null,
+      data.whatsapp_number || null,
+      id,
+    ],
+  });
+}
 
 export async function approveVenueSubmission(
   id: number,

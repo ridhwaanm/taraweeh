@@ -1,13 +1,46 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import L from "leaflet";
 import { VenueMarker } from "./VenueMarker";
 import { VenueSearch } from "./VenueSearch";
+import { JuzFilter } from "./JuzFilter";
 import type { PublicVenue } from "../lib/db";
 import "leaflet/dist/leaflet.css";
 
 // South Africa center
 const SA_CENTER: [number, number] = [-29.0, 25.0];
 const SA_ZOOM = 6;
+
+// Custom cluster icon
+function createClusterIcon(cluster: any) {
+  const count = cluster.getChildCount();
+  let size = 36;
+  let fontSize = 13;
+  if (count >= 10) {
+    size = 42;
+    fontSize = 14;
+  }
+  if (count >= 50) {
+    size = 50;
+    fontSize = 15;
+  }
+  return new L.DivIcon({
+    className: "",
+    html: `<div style="
+      width:${size}px;height:${size}px;
+      background:#178a7a;
+      border:2.5px solid white;
+      border-radius:50%;
+      box-shadow:0 2px 6px rgba(0,0,0,0.3);
+      display:flex;align-items:center;justify-content:center;
+      color:white;font-weight:700;font-size:${fontSize}px;
+      font-family:Inter,sans-serif;
+    ">${count}</div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size / 2],
+  });
+}
 
 // Component to add custom controls to the map
 function ZoomControls() {
@@ -58,6 +91,7 @@ interface VenuesMapProps {
 
 export default function VenuesMap({ venues: venuesProp }: VenuesMapProps) {
   const [venues, setVenues] = useState<PublicVenue[]>(venuesProp ?? []);
+  const [juzRange, setJuzRange] = useState<[number, number] | null>(null);
 
   useEffect(() => {
     if (venuesProp && venuesProp.length > 0) return;
@@ -71,6 +105,28 @@ export default function VenuesMap({ venues: venuesProp }: VenuesMapProps) {
     }
   }, [venuesProp]);
 
+  // Sorted unique juz values from the data
+  const uniqueJuzValues = useMemo(() => {
+    const vals = new Set<number>();
+    for (const v of venues) {
+      if (v.juz_per_night != null) vals.add(v.juz_per_night);
+    }
+    return Array.from(vals).sort((a, b) => a - b);
+  }, [venues]);
+
+  // Filtered venues
+  const filteredVenues = useMemo(() => {
+    if (!juzRange) return venues;
+    const [min, max] = juzRange;
+    return venues.filter(
+      (v) =>
+        v.juz_per_night == null ||
+        (v.juz_per_night >= min && v.juz_per_night <= max),
+    );
+  }, [venues, juzRange]);
+
+  const isFiltered = juzRange !== null;
+
   return (
     <div style={{ position: "relative", width: "100%", height: "100%" }}>
       <MapContainer
@@ -78,16 +134,29 @@ export default function VenuesMap({ venues: venuesProp }: VenuesMapProps) {
         zoom={SA_ZOOM}
         style={{ width: "100%", height: "100%" }}
         scrollWheelZoom={true}
-        zoomControl={false} // We're using custom zoom controls
+        zoomControl={false}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
           url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         <VenueSearch />
-        {venues.map((venue) => (
-          <VenueMarker key={venue.id} venue={venue} />
-        ))}
+        <JuzFilter
+          uniqueValues={uniqueJuzValues}
+          onFilterChange={(min, max) => setJuzRange([min, max])}
+          onFilterClear={() => setJuzRange(null)}
+        />
+        <MarkerClusterGroup
+          chunkedLoading
+          iconCreateFunction={createClusterIcon}
+          maxClusterRadius={50}
+          spiderfyOnMaxZoom
+          showCoverageOnHover={false}
+        >
+          {filteredVenues.map((venue) => (
+            <VenueMarker key={venue.id} venue={venue} />
+          ))}
+        </MarkerClusterGroup>
         <ZoomControls />
       </MapContainer>
       {venues.length > 0 && (
@@ -107,7 +176,9 @@ export default function VenuesMap({ venues: venuesProp }: VenuesMapProps) {
             boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
           }}
         >
-          {venues.length} venue{venues.length !== 1 ? "s" : ""}
+          {isFiltered
+            ? `${filteredVenues.length} of ${venues.length} venues`
+            : `${venues.length} venue${venues.length !== 1 ? "s" : ""}`}
         </div>
       )}
     </div>

@@ -2,8 +2,10 @@ import type { APIRoute } from "astro";
 import { getAuth } from "../../../lib/auth";
 import {
   getVenueSubmissions,
+  getVenueSubmissionById,
   approveVenueSubmission,
   rejectVenueSubmission,
+  updateVenueSubmission,
   db,
 } from "../../../lib/db";
 
@@ -49,34 +51,100 @@ export const PATCH: APIRoute = async (context) => {
 
   try {
     const body = await context.request.json();
-    const { id, action } = body;
+    const { action } = body;
 
-    if (!id || !action) {
-      return new Response(
-        JSON.stringify({ error: "ID and action are required" }),
-        { status: 400 },
-      );
+    if (!action) {
+      return new Response(JSON.stringify({ error: "Action is required" }), {
+        status: 400,
+      });
+    }
+
+    // Bulk operations use `ids`, single operations use `id`
+    const ids: number[] = body.ids || (body.id ? [body.id] : []);
+    if (ids.length === 0) {
+      return new Response(JSON.stringify({ error: "ID or IDs are required" }), {
+        status: 400,
+      });
     }
 
     if (action === "approve") {
-      const { final_name, city } = body;
-      if (!final_name || !city) {
+      // Single approve with custom name/city
+      if (!body.ids && body.final_name && body.city) {
+        const venueId = await approveVenueSubmission(
+          ids[0],
+          body.final_name,
+          body.city,
+        );
+        return new Response(
+          JSON.stringify({ success: true, venue_id: venueId }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      // Bulk approve — use each submission's own venue_name and city
+      let count = 0;
+      for (const id of ids) {
+        const sub = await getVenueSubmissionById.get(id);
+        if (sub && sub.status === "pending") {
+          const name = sub.sub_venue_name
+            ? `${sub.venue_name} — ${sub.sub_venue_name}`
+            : sub.venue_name;
+          await approveVenueSubmission(id, name, sub.city);
+          count++;
+        }
+      }
+      return new Response(JSON.stringify({ success: true, count }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "reject") {
+      let count = 0;
+      for (const id of ids) {
+        await rejectVenueSubmission(id, body.admin_notes);
+        count++;
+      }
+      return new Response(JSON.stringify({ success: true, count }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "edit") {
+      if (ids.length !== 1) {
+        return new Response(
+          JSON.stringify({ error: "Edit requires exactly one ID" }),
+          { status: 400 },
+        );
+      }
+      const { venue_name, address_full, city, latitude, longitude } = body;
+      if (
+        !venue_name ||
+        !address_full ||
+        !city ||
+        latitude == null ||
+        longitude == null
+      ) {
         return new Response(
           JSON.stringify({
-            error: "Venue name and city are required for approval",
+            error:
+              "venue_name, address_full, city, latitude, and longitude are required",
           }),
           { status: 400 },
         );
       }
-      const venueId = await approveVenueSubmission(id, final_name, city);
-      return new Response(
-        JSON.stringify({ success: true, venue_id: venueId }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      );
-    }
-
-    if (action === "reject") {
-      await rejectVenueSubmission(id, body.admin_notes);
+      await updateVenueSubmission(ids[0], {
+        venue_name,
+        sub_venue_name: body.sub_venue_name,
+        address_full,
+        city,
+        province: body.province,
+        latitude,
+        longitude,
+        juz_per_night: body.juz_per_night,
+        reader_names: body.reader_names,
+        whatsapp_number: body.whatsapp_number,
+      });
       return new Response(JSON.stringify({ success: true }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
@@ -84,7 +152,9 @@ export const PATCH: APIRoute = async (context) => {
     }
 
     return new Response(
-      JSON.stringify({ error: "Invalid action. Use 'approve' or 'reject'" }),
+      JSON.stringify({
+        error: "Invalid action. Use 'approve', 'reject', or 'edit'",
+      }),
       { status: 400 },
     );
   } catch (error) {
@@ -109,20 +179,21 @@ export const DELETE: APIRoute = async (context) => {
 
   try {
     const body = await context.request.json();
-    const { id } = body;
+    const ids: number[] = body.ids || (body.id ? [body.id] : []);
 
-    if (!id) {
-      return new Response(JSON.stringify({ error: "ID is required" }), {
+    if (ids.length === 0) {
+      return new Response(JSON.stringify({ error: "ID or IDs are required" }), {
         status: 400,
       });
     }
 
+    const placeholders = ids.map(() => "?").join(", ");
     await db.execute({
-      sql: "DELETE FROM venue_submissions WHERE id = ?",
-      args: [id],
+      sql: `DELETE FROM venue_submissions WHERE id IN (${placeholders})`,
+      args: ids,
     });
 
-    return new Response(JSON.stringify({ success: true }), {
+    return new Response(JSON.stringify({ success: true, count: ids.length }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
