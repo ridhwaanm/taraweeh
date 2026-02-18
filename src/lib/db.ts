@@ -390,19 +390,13 @@ export async function updateVenueSubmission(
   });
 }
 
-export async function approveVenueSubmission(
-  id: number,
-  finalName: string,
-  city: string,
-): Promise<number> {
-  const venueId = await getOrCreateVenue(finalName, city);
+export async function approveVenueSubmission(id: number): Promise<void> {
   await db.execute({
     sql: `UPDATE venue_submissions
-      SET status = 'approved', approved_venue_id = ?, reviewed_at = CURRENT_TIMESTAMP
+      SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP
       WHERE id = ?`,
-    args: [venueId, id],
+    args: [id],
   });
-  return venueId;
 }
 
 export async function rejectVenueSubmission(
@@ -422,71 +416,20 @@ export async function bulkApproveVenueSubmissions(
 ): Promise<number> {
   if (ids.length === 0) return 0;
 
-  // 1. Fetch all pending submissions in one query
+  // Fetch all pending submissions
   const placeholders = ids.map(() => "?").join(", ");
   const result = await db.execute({
-    sql: `SELECT id, venue_name, sub_venue_name, city FROM venue_submissions WHERE id IN (${placeholders}) AND status = 'pending'`,
+    sql: `SELECT id FROM venue_submissions WHERE id IN (${placeholders}) AND status = 'pending'`,
     args: ids,
   });
-  const subs = resultToArray<{
-    id: number;
-    venue_name: string;
-    sub_venue_name: string | null;
-    city: string;
-  }>(result);
+  const subs = resultToArray<{ id: number }>(result);
   if (subs.length === 0) return 0;
 
-  // 2. Build venue lookup from existing venues
-  const existingVenues = await db.execute("SELECT id, name, city FROM venues");
-  const venueMap = new Map<string, number>();
-  for (const row of resultToArray<{ id: number; name: string; city: string }>(
-    existingVenues,
-  )) {
-    venueMap.set(`${row.name}|||${row.city}`, row.id);
-  }
-
-  // 3. Determine which venues need creating (deduplicated)
-  const uniqueNewVenues = new Map<string, { name: string; city: string }>();
-  for (const s of subs) {
-    const name = s.sub_venue_name
-      ? `${s.venue_name} — ${s.sub_venue_name}`
-      : s.venue_name;
-    const key = `${name}|||${s.city}`;
-    if (!venueMap.has(key)) uniqueNewVenues.set(key, { name, city: s.city });
-  }
-
-  // 4. Batch-insert missing venues
-  if (uniqueNewVenues.size > 0) {
-    const insertStmts = [...uniqueNewVenues.values()].map((k) => ({
-      sql: "INSERT INTO venues (name, city) VALUES (?, ?)",
-      args: [k.name, k.city] as (string | number | null)[],
-    }));
-    for (let i = 0; i < insertStmts.length; i += 100) {
-      await db.batch(insertStmts.slice(i, i + 100), "write");
-    }
-    // Re-fetch all venue IDs
-    const allVenues = await db.execute("SELECT id, name, city FROM venues");
-    venueMap.clear();
-    for (const row of resultToArray<{
-      id: number;
-      name: string;
-      city: string;
-    }>(allVenues)) {
-      venueMap.set(`${row.name}|||${row.city}`, row.id);
-    }
-  }
-
-  // 5. Batch-update all submissions to approved
-  const updateStmts = subs.map((s) => {
-    const name = s.sub_venue_name
-      ? `${s.venue_name} — ${s.sub_venue_name}`
-      : s.venue_name;
-    const venueId = venueMap.get(`${name}|||${s.city}`)!;
-    return {
-      sql: "UPDATE venue_submissions SET status = 'approved', approved_venue_id = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?",
-      args: [venueId, s.id] as (string | number | null)[],
-    };
-  });
+  // Batch-update all submissions to approved
+  const updateStmts = subs.map((s) => ({
+    sql: "UPDATE venue_submissions SET status = 'approved', reviewed_at = CURRENT_TIMESTAMP WHERE id = ?",
+    args: [s.id] as (string | number | null)[],
+  }));
   for (let i = 0; i < updateStmts.length; i += 100) {
     await db.batch(updateStmts.slice(i, i + 100), "write");
   }

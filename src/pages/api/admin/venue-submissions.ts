@@ -69,17 +69,12 @@ export const PATCH: APIRoute = async (context) => {
     }
 
     if (action === "approve") {
-      // Single approve with custom name/city
-      if (!body.ids && body.final_name && body.city) {
-        const venueId = await approveVenueSubmission(
-          ids[0],
-          body.final_name,
-          body.city,
-        );
-        return new Response(
-          JSON.stringify({ success: true, venue_id: venueId }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        );
+      if (ids.length === 1) {
+        await approveVenueSubmission(ids[0]);
+        return new Response(JSON.stringify({ success: true }), {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        });
       }
       // Bulk approve — batch operation
       const count = await bulkApproveVenueSubmissions(ids);

@@ -103,8 +103,6 @@ export function VenueSubmissionsTable() {
   const [approveTarget, setApproveTarget] = useState<VenueSubmission | null>(
     null,
   );
-  const [approveName, setApproveName] = useState("");
-  const [approveCity, setApproveCity] = useState("");
   const [approveError, setApproveError] = useState("");
 
   // Reject dialog (single)
@@ -234,12 +232,6 @@ export function VenueSubmissionsTable() {
   // --- Single actions ---
   const openApprove = (sub: VenueSubmission) => {
     setApproveTarget(sub);
-    setApproveName(
-      sub.sub_venue_name
-        ? `${sub.venue_name} — ${sub.sub_venue_name}`
-        : sub.venue_name,
-    );
-    setApproveCity(sub.city);
     setApproveError("");
     setIsApproveOpen(true);
   };
@@ -254,8 +246,6 @@ export function VenueSubmissionsTable() {
         body: JSON.stringify({
           id: approveTarget.id,
           action: "approve",
-          final_name: approveName,
-          city: approveCity,
         }),
       });
       if (!res.ok) {
@@ -857,27 +847,18 @@ export function VenueSubmissionsTable() {
         <DialogTitle>Approve Venue Submission</DialogTitle>
         <DialogBody>
           <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
-            Confirm the final venue name and city. This will create a new entry
-            in the venues directory.
+            Approve this venue submission? It will appear on the venues map.
           </p>
-          <div className="space-y-4">
-            <Field>
-              <Label>Venue Name</Label>
-              <Input
-                value={approveName}
-                onChange={(e) => setApproveName(e.target.value)}
-              />
-            </Field>
-            <Field>
-              <Label>City</Label>
-              <Input
-                value={approveCity}
-                onChange={(e) => setApproveCity(e.target.value)}
-              />
-            </Field>
-          </div>
           {approveTarget && (
-            <div className="mt-4 p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg text-sm">
+            <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-lg text-sm space-y-1">
+              <div className="text-zinc-900 dark:text-white font-medium">
+                {approveTarget.venue_name}
+                {approveTarget.sub_venue_name &&
+                  ` — ${approveTarget.sub_venue_name}`}
+              </div>
+              <div className="text-zinc-500 dark:text-zinc-400">
+                <strong>City:</strong> {approveTarget.city}
+              </div>
               <div className="text-zinc-500 dark:text-zinc-400">
                 <strong>Address:</strong> {approveTarget.address_full}
               </div>
@@ -905,11 +886,7 @@ export function VenueSubmissionsTable() {
           <Button plain onClick={() => setIsApproveOpen(false)}>
             Cancel
           </Button>
-          <Button
-            onClick={handleApprove}
-            color="indigo"
-            disabled={!approveName.trim() || !approveCity.trim()}
-          >
+          <Button onClick={handleApprove} color="indigo">
             Confirm Approval
           </Button>
         </DialogActions>
@@ -1106,7 +1083,7 @@ export function VenueSubmissionsTable() {
           ) : (
             <p className="text-sm text-zinc-600 dark:text-zinc-400">
               Approve <strong>{selectedIds.size}</strong> selected submissions?
-              Each venue will be created using its submitted name and city.
+              They will appear on the venues map.
             </p>
           )}
         </DialogBody>
